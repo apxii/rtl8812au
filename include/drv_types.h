@@ -121,10 +121,10 @@ typedef struct _ADAPTER _adapter, ADAPTER,*PADAPTER;
 #include "ioctl_cfg80211.h"
 #endif //CONFIG_IOCTL_CFG80211
 
-#include <ip.h>
-#include <if_ether.h>
+#include <linux/ip.h>
+#include <linux/if_ether.h>
 #include <ethernet.h>
-#include <circ_buf.h>
+#include <linux/circ_buf.h>
 
 #include <rtw_android.h>
 
