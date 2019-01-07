@@ -22,6 +22,12 @@
 #endif
 #define BIT(x)	(1 << (x))
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0))
+#define ieee80211_band nl80211_band
+#define IEEE80211_BAND_2GHZ NL80211_BAND_2GHZ
+#define IEEE80211_BAND_5GHZ NL80211_BAND_5GHZ
+#define IEEE80211_NUM_BANDS NUM_NL80211_BANDS
+#endif
 
 #define WLAN_ETHHDR_LEN		14
 #define WLAN_ETHADDR_LEN	6
@@ -842,8 +848,9 @@ typedef enum _HT_CAP_AMPDU_FACTOR {
  * According to IEEE802.11n spec size varies from 8K to 64K (in powers of 2)
  */
 #define IEEE80211_MIN_AMPDU_BUF 0x8
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 19, 0))
 #define IEEE80211_MAX_AMPDU_BUF 0x40
-
+#endif
 
 /* Spatial Multiplexing Power Save Modes */
 #define WLAN_HT_CAP_SM_PS_STATIC		0
