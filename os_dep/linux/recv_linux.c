@@ -714,10 +714,10 @@ int rtw_recv_indicatepkt(_adapter *padapter, union recv_frame *precv_frame)
 
 	skb->len = precv_frame->u.hdr.len;
 
-
+/*
 	if (pattrib->eth_type == 0x888e)
 		RTW_PRINT("recv eapol packet\n");
-
+*/
 #ifdef CONFIG_AUTO_AP_MODE
 	if (0x8899 == pattrib->eth_type) {
 		rtw_os_ksocket_send(padapter, precv_frame);

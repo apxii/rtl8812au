@@ -14425,10 +14425,10 @@ u8 setkey_hdl(_adapter *padapter, u8 *pbuf)
 	}
 
 	ctrl = BIT(15) | BIT(6) | ((pparm->algorithm) << 2) | pparm->keyid;
-
+/*
 	RTW_PRINT("set group key camid:%d, addr:"MAC_FMT", kid:%d, type:%s\n"
 		, cam_id, MAC_ARG(addr), pparm->keyid, security_type_str(pparm->algorithm));
-
+*/
 	write_cam(padapter, cam_id, ctrl, addr, pparm->key);
 
 	/* if ((cam_id > 3) && (((pmlmeinfo->state&0x03) == WIFI_FW_AP_STATE) || ((pmlmeinfo->state&0x03) == WIFI_FW_ADHOC_STATE)))*/
