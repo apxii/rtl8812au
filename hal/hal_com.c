@@ -3960,13 +3960,6 @@ static u8 rtw_hal_set_wowlan_ctrl_cmd(_adapter *adapter, u8 enable, u8 change_un
 		gpio_pulse_en = 1;
 	}
 
-#ifdef CONFIG_PLATFORM_ARM_RK3188
-	if (enable) {
-		gpio_pulse_en = 1;
-		gpio_pulse_cnt = 0x04;
-	}
-#endif
-
 	SET_H2CCMD_WOWLAN_FUNC_ENABLE(u1H2CWoWlanCtrlParm, enable);
 	SET_H2CCMD_WOWLAN_PATTERN_MATCH_ENABLE(u1H2CWoWlanCtrlParm, enable);
 	SET_H2CCMD_WOWLAN_MAGIC_PKT_ENABLE(u1H2CWoWlanCtrlParm, magic_pkt);
@@ -9991,11 +9984,6 @@ static void rtw_set_usb_agg_by_mode_customer(_adapter *padapter, u8 cur_wireless
 
 static void rtw_set_usb_agg_by_mode(_adapter *padapter, u8 cur_wireless_mode)
 {
-#ifdef CONFIG_PLATFORM_NOVATEK_NT72668
-	rtw_set_usb_agg_by_mode_customer(padapter, cur_wireless_mode, 0x3, 0x3);
-	return;
-#endif /* CONFIG_PLATFORM_NOVATEK_NT72668 */
-
 	rtw_set_usb_agg_by_mode_normal(padapter, cur_wireless_mode);
 }
 #endif /* CONFIG_USB_RX_AGGREGATION */
@@ -10040,10 +10028,6 @@ void dm_DynamicUsbTxAgg(_adapter *padapter, u8 from_timer)
 		if (bassocaed)
 #endif
 			rtw_set_usb_agg_by_mode(padapter, cur_wireless_mode);
-#ifdef CONFIG_PLATFORM_NOVATEK_NT72668
-	} else {
-		rtw_set_usb_agg_by_mode(padapter, cur_wireless_mode);
-#endif /* CONFIG_PLATFORM_NOVATEK_NT72668 */
 	}
 #endif
 }

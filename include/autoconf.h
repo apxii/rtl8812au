@@ -292,26 +292,6 @@
  * Platform  Related Config
  */
 
-
-
-#if defined(CONFIG_PLATFORM_ACTIONS_ATM702X)
-	#ifdef CONFIG_USB_TX_AGGREGATION
-		#undef CONFIG_USB_TX_AGGREGATION
-	#endif
-	#ifndef CONFIG_USE_USB_BUFFER_ALLOC_TX
-		#define CONFIG_USE_USB_BUFFER_ALLOC_TX
-	#endif
-	#ifndef CONFIG_USE_USB_BUFFER_ALLOC_RX
-		#define CONFIG_USE_USB_BUFFER_ALLOC_RX
-		#ifdef CONFIG_PREALLOC_RECV_SKB
-			#undef CONFIG_PREALLOC_RECV_SKB
-		#endif
-	#endif
-#endif
-
-
-
-
 #ifdef CONFIG_USB_TX_AGGREGATION
 /* #define	CONFIG_TX_EARLY_MODE */
 #endif

@@ -2254,11 +2254,6 @@ int rtw_mp_SetBT(struct net_device *dev,
 		rtw_write32(padapter, 0xcc, (rtw_read32(padapter, 0xcc) & 0xFFFFFFFB));
 		rtw_msleep_os(1200);
 
-#if defined(CONFIG_PLATFORM_SPRD) && (MP_DRIVER == 1)
-		/* Pull up BT reset pin.*/
-		RTW_INFO("%s: pull up BT reset pin when bt start mp test\n", __func__);
-		rtw_wifi_gpio_wlan_ctrl(WLAN_BT_PWDN_ON);
-#endif
 		RTW_INFO(" FirmwareDownload!\n");
 
 #if defined(CONFIG_RTL8723B)

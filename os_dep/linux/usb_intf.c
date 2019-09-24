@@ -1130,10 +1130,6 @@ error_exit:
 }
 #endif
 
-#ifdef CONFIG_PLATFORM_RTD2880B
-extern void rtd2885_wlan_netlink_sendMsg(char *action_string, char *name);
-#endif
-
 /*
  * drv_init() - a device potentially for us
  *
@@ -1338,12 +1334,6 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 #endif /* RTW_HALMAC */
 
 	rtw_vmfree((u8 *)padapter, sizeof(_adapter));
-
-#ifdef CONFIG_PLATFORM_RTD2880B
-	RTW_INFO("wlan link down\n");
-	rtd2885_wlan_netlink_sendMsg("linkdown", "8712");
-#endif
-
 }
 
 static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device_id *pdid)
@@ -1405,12 +1395,6 @@ static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device
 #ifdef CONFIG_HOSTAPD_MLME
 	hostapd_mode_init(padapter);
 #endif
-
-#ifdef CONFIG_PLATFORM_RTD2880B
-	RTW_INFO("wlan link up\n");
-	rtd2885_wlan_netlink_sendMsg("linkup", "8712");
-#endif
-
 
 	status = _SUCCESS;
 
@@ -1521,12 +1505,6 @@ static int __init rtw_drv_entry(void)
 	RTW_PRINT(DRV_NAME" BT-Coex version = %s\n", BTCOEXVERSION);
 #endif /* BTCOEXVERSION */
 
-	ret = platform_wifi_power_on();
-	if (ret != 0) {
-		RTW_INFO("%s: power on failed!!(%d)\n", __FUNCTION__, ret);
-		ret = -1;
-		goto exit;
-	}
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
 	/* console_suspend_enabled=0; */
 #endif
@@ -1558,8 +1536,6 @@ static void __exit rtw_drv_halt(void)
 	usb_drv.drv_registered = _FALSE;
 
 	usb_deregister(&usb_drv.usbdrv);
-
-	platform_wifi_power_off();
 
 	rtw_suspend_lock_uninit();
 	rtw_drv_proc_deinit();
