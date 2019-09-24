@@ -231,7 +231,7 @@ extern uint rtw_drv_log_level;
 #define _RTW_DUMP_SEL(sel, _HexData, _HexDataLen) \
 	do {\
 		if (sel == RTW_DBGDUMP) {\
-			print_hex_dump(KERN_INFO, _TitleString, DUMP_PREFIX_OFFSET, 16, _HexDataLen/16+1, _HexData, _HexDataLen, true); \
+			print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, _HexDataLen/16+1, _HexData, _HexDataLen, true); \
 		} \
 		else {\
 			int __i;								\
