@@ -163,10 +163,6 @@
 	defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8703B) ||\
 	defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8723D)
 	#define TXDESC_SIZE 40
-#elif defined(CONFIG_RTL8822B)
-	#define TXDESC_SIZE 48		/* HALMAC_TX_DESC_SIZE_8822B */
-#elif defined(CONFIG_RTL8821C)
-	#define TXDESC_SIZE 48		/* HALMAC_TX_DESC_SIZE_8821C */
 #else
 	#define TXDESC_SIZE 32 /* old IC (ex: 8188E) */
 #endif
@@ -477,9 +473,6 @@ struct xmit_buf {
 
 	/* u32 sz[8]; */
 	u32	ff_hwaddr;
-#ifdef RTW_HALMAC
-	u8 bulkout_id; /* for halmac */
-#endif /* RTW_HALMAC */
 
 	PURB	pxmit_urb[8];
 	dma_addr_t dma_transfer_addr;	/* (in) dma addr for transfer_buffer */

@@ -205,7 +205,6 @@
 	#define CONFIG_AP_PORT_SWAP
 	#define CONFIG_FW_MULTI_PORT_SUPPORT
 	#endif
-	#define CONFIG_SUPPORT_FIFO_DUMP
 #endif
 
 #endif /*__HAL_IC_CFG_H__*/

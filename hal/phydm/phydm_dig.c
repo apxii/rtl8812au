@@ -1389,9 +1389,6 @@ odm_false_alarm_counter_statistics(
 {
 	struct PHY_DM_STRUCT					*p_dm_odm = (struct PHY_DM_STRUCT *)p_dm_void;
 	struct _FALSE_ALARM_STATISTICS	*false_alm_cnt = (struct _FALSE_ALARM_STATISTICS *)phydm_get_structure(p_dm_odm, PHYDM_FALSEALMCNT);
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-	struct _RT_ADCSMP					*adc_smp = &(p_dm_odm->adcsmp);
-#endif
 	u32						ret_value;
 
 	if (!(p_dm_odm->support_ability & ODM_BB_FA_CNT))
@@ -1601,9 +1598,6 @@ odm_false_alarm_counter_statistics(
 			false_alm_cnt->cnt_cca_all = false_alm_cnt->cnt_ofdm_cca;
 		}
 
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-		if (adc_smp->adc_smp_state == ADCSMP_STATE_IDLE)
-#endif
 		{
 			if (phydm_set_bb_dbg_port(p_dm_odm, BB_DBGPORT_PRIORITY_1, 0x0)) {/*set debug port to 0x0*/
 				false_alm_cnt->dbg_port0 = phydm_get_bb_dbg_port_value(p_dm_odm);

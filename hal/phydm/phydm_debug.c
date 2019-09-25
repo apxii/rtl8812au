@@ -2342,15 +2342,6 @@ phydm_cmd_parser(
 		break;
 
 	case PHYDM_LA_MODE:
-
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-		p_dm_odm->support_ability &= ~(ODM_BB_FA_CNT);
-		phydm_lamode_trigger_setting(p_dm_odm, &input[0], &used, output, &out_len, input_num);
-		p_dm_odm->support_ability |= ODM_BB_FA_CNT;
-#else
-		PHYDM_SNPRINTF((output + used, out_len - used, "This IC doesn't support LA mode\n"));
-#endif
-
 		break;
 
 	case PHYDM_DUMP_REG:

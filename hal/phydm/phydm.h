@@ -44,7 +44,6 @@
 #include "phydm_ccx.h"
 #include "txbf/phydm_hal_txbf_api.h"
 
-#include "phydm_adc_sampling.h"
 #include "phydm_dynamic_rx_path.h"
 #include "phydm_psd.h"
 
@@ -847,9 +846,6 @@ enum phy_reg_pg_type {
 	struct	_PHYDM_PSD_				dm_psd_table;
 #endif
 	
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-	struct _RT_ADCSMP					adcsmp;
-#endif
 #if (CONFIG_DYNAMIC_RX_PATH == 1)
 	struct _DYNAMIC_RX_PATH_			dm_drp_table;
 #endif

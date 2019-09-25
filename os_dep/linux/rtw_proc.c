@@ -382,17 +382,6 @@ static int proc_get_sdio_card_info(struct seq_file *m, void *v)
 }
 #endif /* CONFIG_SDIO_HCI */
 
-#ifdef RTW_HALMAC
-#include "../../hal/hal_halmac.h"
-static int proc_get_halmac_info(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-
-	rtw_dump_halmac_info(m);
-	return 0;
-}
-#endif
 static int proc_get_fw_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2233,18 +2222,6 @@ static int proc_get_phy_cap(struct seq_file *m, void *v)
 	return 0;
 }
 
-#ifdef CONFIG_SUPPORT_TRX_SHARED
-#include "../../hal/hal_halmac.h"
-static int proc_get_trx_share_mode(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-
-	dump_trx_share_mode(m, adapter);
-	return 0;
-}
-#endif
-
 static int proc_dump_rsvd_page(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2550,17 +2527,10 @@ static const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("txbf_cap", proc_get_txbf_cap, proc_set_txbf_cap),
 #endif
 
-#ifdef CONFIG_SUPPORT_TRX_SHARED
-	RTW_PROC_HDL_SSEQ("trx_share_mode", proc_get_trx_share_mode, NULL),
-#endif
 	RTW_PROC_HDL_SSEQ("napi_info", proc_get_napi_info, NULL),
 	RTW_PROC_HDL_SSEQ("rsvd_page", proc_dump_rsvd_page, proc_set_rsvd_page_info),
 
 	RTW_PROC_HDL_SSEQ("fw_info", proc_get_fw_info, NULL),
-#ifdef RTW_HALMAC
-	RTW_PROC_HDL_SSEQ("halmac_info", proc_get_halmac_info, NULL),
-#endif
-
 #ifdef DBG_XMIT_BLOCK
 	RTW_PROC_HDL_SSEQ("xmit_block", proc_get_xmit_block, proc_set_xmit_block),
 #endif

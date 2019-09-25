@@ -1327,10 +1327,6 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 	/* TODO: use rtw_os_ndevs_deinit instead at the first stage of driver's dev deinit function */
 	rtw_os_ndev_free(padapter);
 
-#ifdef RTW_HALMAC
-	rtw_halmac_deinit_adapter(adapter_to_dvobj(padapter));
-#endif /* RTW_HALMAC */
-
 	rtw_vmfree((u8 *)padapter, sizeof(_adapter));
 }
 

@@ -68,8 +68,6 @@
 #include "phydm_interface.h"
 #include "phydm_reg.h"
 
-#include "phydm_adc_sampling.h"
-
 #if (DM_ODM_SUPPORT_TYPE & ODM_CE)
 
 void
@@ -258,26 +256,6 @@ phy_set_tx_power_limit(
 	#endif
 #endif
 
-#if (RTL8822B_SUPPORT == 1)
-	#include "rtl8822b/halhwimg8822b_mac.h"
-	#include "rtl8822b/halhwimg8822b_rf.h"
-	#include "rtl8822b/halhwimg8822b_bb.h"
-	#include "rtl8822b/halhwimg8822b_fw.h"
-	#include "rtl8822b/phydm_regconfig8822b.h"
-	#include "rtl8822b/halphyrf_8822b.h"
-	#include "rtl8822b/phydm_rtl8822b.h"
-	#include "rtl8822b/phydm_hal_api8822b.h"
-	#include "rtl8822b/version_rtl8822b.h"
-
-	#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	#elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
-		#include <hal_data.h>		/* struct HAL_DATA_TYPE */
-		#include <rtl8822b_hal.h>	/* RX_SMOOTH_FACTOR, reg definition and etc.*/
-	#elif (DM_ODM_SUPPORT_TYPE == ODM_AP)
-	#endif
-
-#endif
-
 #if (RTL8703B_SUPPORT == 1)
 	#include "rtl8703b/phydm_regconfig8703b.h"
 	#include "rtl8703b/halhwimg8703b_mac.h"
@@ -353,23 +331,6 @@ phy_set_tx_power_limit(
 	#include "rtl8197f/phydm_regconfig8197f.h"
 	#include "rtl8197f/halphyrf_8197f.h"
 	#include "rtl8197f/phydm_iqk_8197f.h"
-#endif
-
-#if (RTL8821C_SUPPORT == 1)
-	#include "rtl8821c/phydm_hal_api8821c.h"
-	#include "rtl8821c/halhwimg8821c_testchip_mac.h"
-	#include "rtl8821c/halhwimg8821c_testchip_rf.h"
-	#include "rtl8821c/halhwimg8821c_testchip_bb.h"
-	#include "rtl8821c/halhwimg8821c_mac.h"
-	#include "rtl8821c/halhwimg8821c_rf.h"
-	#include "rtl8821c/halhwimg8821c_bb.h"
-	#include "rtl8821c/halhwimg8821c_fw.h"
-	#include "rtl8821c/phydm_regconfig8821c.h"
-	#include "rtl8821c/halphyrf_8821c.h"
-	#include "rtl8821c/version_rtl8821c.h"
-	#if (DM_ODM_SUPPORT_TYPE == ODM_CE)
-		#include "rtl8821c_hal.h"
-	#endif
 #endif
 
 #endif /* __ODM_PRECOMP_H__ */

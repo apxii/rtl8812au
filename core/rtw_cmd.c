@@ -3773,9 +3773,6 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 			}
 #endif /*CONFIG_RF_POWER_TRIM*/
 			rtw_hal_init(padapter);
-#ifdef RTW_HALMAC /*for New IC*/
-			MPT_InitializeAdapter(padapter, 1);
-#endif /* CONFIG_MP_INCLUDED */
 		}
 
 		if (padapter->registrypriv.mp_mode == 0) {

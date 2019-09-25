@@ -37,9 +37,7 @@ CONFIG_RTL8723B = n
 CONFIG_RTL8814A = n
 CONFIG_RTL8723C = n
 CONFIG_RTL8188F = n
-CONFIG_RTL8822B = n
 CONFIG_RTL8723D = n
-CONFIG_RTL8821C = n
 ######################### Interface ###########################
 CONFIG_USB_HCI = y
 CONFIG_PCI_HCI = n
@@ -176,7 +174,6 @@ _OUTSRC_FILES := hal/phydm/phydm_debug.o	\
 		hal/phydm/txbf/halcomtxbf.o\
 		hal/phydm/txbf/haltxbfinterface.o\
 		hal/phydm/txbf/phydm_hal_txbf_api.o\
-		hal/phydm/phydm_adc_sampling.o\
 		hal/phydm/phydm_kfree.o\
 		hal/phydm/phydm_ccx.o\
 		hal/phydm/phydm_psd.o
@@ -749,16 +746,6 @@ _OUTSRC_FILES += hal/phydm/$(RTL871X)/halhwimg8188f_bb.o\
 								hal/phydm/$(RTL871X)/halphyrf_8188f.o \
 								hal/phydm/$(RTL871X)/phydm_rtl8188f.o
 
-endif
-
-########### HAL_RTL8822B #################################
-ifeq ($(CONFIG_RTL8822B), y)
-include $(TopDIR)/rtl8822b.mk
-endif
-
-########### HAL_RTL8821C #################################
-ifeq ($(CONFIG_RTL8821C), y)
-include $(TopDIR)/rtl8821c.mk
 endif
 
 ########### AUTO_CFG  #################################

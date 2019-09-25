@@ -1156,9 +1156,6 @@ odm_dm_init(
 	odm_path_diversity_init(p_dm_odm);
 	odm_dynamic_tx_power_init(p_dm_odm);
 	phydm_init_ra_info(p_dm_odm);
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-	adc_smp_init(p_dm_odm);
-#endif
 
 #if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	#ifdef BEAMFORMING_VERSION_1
@@ -2132,23 +2129,6 @@ odm_init_all_work_items(struct PHY_DM_STRUCT	*p_dm_odm)
 		(RT_WORKITEM_CALL_BACK)phydm_resume_edcca_work_item_callback,
 		(void *)p_adapter,
 		"phydm_resume_edcca_work_item");
-
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-	odm_initialize_work_item(
-		p_dm_odm,
-		&(p_dm_odm->adcsmp.adc_smp_work_item),
-		(RT_WORKITEM_CALL_BACK)adc_smp_work_item_callback,
-		(void *)p_adapter,
-		"adc_smp_work_item");
-
-	odm_initialize_work_item(
-		p_dm_odm,
-		&(p_dm_odm->adcsmp.adc_smp_work_item_1),
-		(RT_WORKITEM_CALL_BACK)adc_smp_work_item_callback,
-		(void *)p_adapter,
-		"adc_smp_work_item_1");
-#endif
-
 }
 
 void
@@ -2194,12 +2174,6 @@ odm_free_all_work_items(struct PHY_DM_STRUCT	*p_dm_odm)
 
 	odm_free_work_item((&p_dm_odm->adaptivity.phydm_pause_edcca_work_item));
 	odm_free_work_item((&p_dm_odm->adaptivity.phydm_resume_edcca_work_item));
-
-#if (PHYDM_LA_MODE_SUPPORT == 1)
-	odm_free_work_item((&p_dm_odm->adcsmp.adc_smp_work_item));
-	odm_free_work_item((&p_dm_odm->adcsmp.adc_smp_work_item_1));
-#endif
-
 }
 #endif /*#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)*/
 

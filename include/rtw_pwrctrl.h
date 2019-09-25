@@ -445,10 +445,6 @@ struct pwrctrl_priv {
 	lps_poff_info_t	*plps_poff_info;
 #endif
 	u8 lps_level; /*LPS_NORMAL,LPA_CG,LPS_PG*/
-#ifdef CONFIG_LPS_PG
-	u8 lpspg_rsvd_page_locate;
-	u8 blpspg_info_up;
-#endif
 	u8 current_lps_hw_port_id;
 };
 
