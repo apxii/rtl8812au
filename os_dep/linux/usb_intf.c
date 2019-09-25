@@ -1489,9 +1489,6 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 	return;
 
 }
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
-extern int console_suspend_enabled;
-#endif
 
 static int __init rtw_drv_entry(void)
 {
@@ -1502,10 +1499,6 @@ static int __init rtw_drv_entry(void)
 #ifdef BTCOEXVERSION
 	RTW_PRINT(DRV_NAME" BT-Coex version = %s\n", BTCOEXVERSION);
 #endif /* BTCOEXVERSION */
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
-	/* console_suspend_enabled=0; */
-#endif
 
 	usb_drv.drv_registered = _TRUE;
 	rtw_suspend_lock_init();
