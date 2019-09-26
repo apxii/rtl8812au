@@ -11360,7 +11360,6 @@ static struct xmit_frame *createloopbackpkt(PADAPTER padapter, u32 size)
 	pattrib->subtype = WIFI_DATA;
 	pattrib->priority = 0;
 	pattrib->qsel = pattrib->priority;
-	/*	do_queue_select(padapter, pattrib); */
 	pattrib->nr_frags = 1;
 	pattrib->encrypt = 0;
 	pattrib->bswenc = _FALSE;
