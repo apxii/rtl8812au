@@ -2913,7 +2913,7 @@ odm_rate_adaptive_state_ap_init(
 }
 #elif (DM_ODM_SUPPORT_TYPE == ODM_CE) /*#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)*/
 
-static void
+void
 find_minimum_rssi(
 	struct _ADAPTER	*p_adapter
 )
