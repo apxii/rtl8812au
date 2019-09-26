@@ -25,12 +25,6 @@
 	#include <hal_btcoex.h>
 #endif
 
-#ifdef CONFIG_SDIO_HCI
-	#include <hal_sdio.h>
-#endif
-#ifdef CONFIG_GSPI_HCI
-	#include <hal_gspi.h>
-#endif
 /*
  * <Roger_Notes> For RTL8723 WiFi/BT/GPS multi-function configuration. 2010.10.06.
  *   */
@@ -121,40 +115,8 @@ typedef enum _RX_AGG_MODE {
 
 #endif /* RTW_RX_AGGREGATION */
 
-/* E-Fuse */
-#ifdef CONFIG_RTL8188E
-	#define EFUSE_MAP_SIZE	512
-#endif
-#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A) || defined(CONFIG_RTL8814A)
-	#define EFUSE_MAP_SIZE	512
-#endif
-#ifdef CONFIG_RTL8192E
-	#define EFUSE_MAP_SIZE	512
-#endif
-#ifdef CONFIG_RTL8723B
-	#define EFUSE_MAP_SIZE	512
-#endif
-#ifdef CONFIG_RTL8814A
-	#define EFUSE_MAP_SIZE	512
-#endif
-#ifdef CONFIG_RTL8703B
-	#define EFUSE_MAP_SIZE	512
-#endif
-#ifdef CONFIG_RTL8723D
-	#define EFUSE_MAP_SIZE	512
-#endif
-#ifdef CONFIG_RTL8188F
-	#define EFUSE_MAP_SIZE	512
-#endif
-
-#if defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)
-	#define EFUSE_MAX_SIZE	1024
-#elif defined(CONFIG_RTL8188E) || defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8703B)
-	#define EFUSE_MAX_SIZE	256
-#else
-	#define EFUSE_MAX_SIZE	512
-#endif
-/* end of E-Fuse */
+#define EFUSE_MAP_SIZE	512
+#define EFUSE_MAX_SIZE	512
 
 #define Mac_OFDM_OK			0x00000000
 #define Mac_OFDM_Fail		0x10000000
@@ -168,16 +130,8 @@ typedef enum _RX_AGG_MODE {
 #define Mac_DropPacket		0xA0000000
 
 #ifdef CONFIG_RF_POWER_TRIM
-#if defined(CONFIG_RTL8723B)
-	#define REG_RF_BB_GAIN_OFFSET	0x7f
-	#define RF_GAIN_OFFSET_MASK		0xfffff
-#elif defined(CONFIG_RTL8188E)
 	#define REG_RF_BB_GAIN_OFFSET	0x55
 	#define RF_GAIN_OFFSET_MASK		0xfffff
-#else
-	#define REG_RF_BB_GAIN_OFFSET	0x55
-	#define RF_GAIN_OFFSET_MASK		0xfffff
-#endif /* CONFIG_RTL8723B */
 #endif /*CONFIG_RF_POWER_TRIM*/
 
 /* For store initial value of BB register */
@@ -394,10 +348,6 @@ typedef struct hal_com_data {
 	u16	EEPROMPID;
 	u16	EEPROMSDID;
 #endif
-#ifdef CONFIG_PCI_HCI
-	u16	EEPROMDID;
-	u16	EEPROMSMID;
-#endif
 
 	u8	EEPROMCustomerID;
 	u8	EEPROMSubCustomerID;
@@ -421,11 +371,6 @@ typedef struct hal_com_data {
 	struct kfree_data_t kfree_data;
 #endif /*CONFIG_RF_POWER_TRIM*/
 
-#if defined(CONFIG_RTL8723B) || defined(CONFIG_RTL8703B) || \
-	defined(CONFIG_RTL8723D)
-	u8	adjuseVoltageVal;
-	u8	need_restore;
-#endif
 	u8	EfuseUsedPercentage;
 	u16	EfuseUsedBytes;
 	/*u8		EfuseMap[2][HWSET_MAX_SIZE_JAGUAR];*/
@@ -618,37 +563,6 @@ typedef struct hal_com_data {
 	u8 rxagg_dma_timeout;
 #endif /* RTW_RX_AGGREGATION */
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	/*  */
-	/* For SDIO Interface HAL related */
-	/*  */
-
-	/*  */
-	/* SDIO ISR Related */
-	/*
-	*	u32			IntrMask[1];
-	*	u32			IntrMaskToSet[1];
-	*	LOG_INTERRUPT		InterruptLog; */
-	u32			sdio_himr;
-	u32			sdio_hisr;
-	/*  */
-	/* SDIO Tx FIFO related. */
-	/*  */
-	/* HIQ, MID, LOW, PUB free pages; padapter->xmitpriv.free_txpg */
-	u8			SdioTxFIFOFreePage[SDIO_TX_FREE_PG_QUEUE];
-	_lock		SdioTxFIFOFreePageLock;
-	u8			SdioTxOQTMaxFreeSpace;
-	u8			SdioTxOQTFreeSpace;
-
-	/*  */
-	/* SDIO Rx FIFO related. */
-	/*  */
-	u8			SdioRxFIFOCnt;
-	u16			SdioRxFIFOSize;
-
-	u32			sdio_tx_max_len[SDIO_MAX_TX_QUEUE];/* H, N, L, used for sdio tx aggregation max length per queue */
-#endif /* CONFIG_SDIO_HCI */
-
 #ifdef CONFIG_USB_HCI
 
 	/* 2010/12/10 MH Add for USB aggreation mode dynamic shceme. */
@@ -676,30 +590,6 @@ typedef struct hal_com_data {
 #endif /* CONFIG_USB_HCI */
 
 
-#ifdef CONFIG_PCI_HCI
-	/*  */
-	/* EEPROM setting. */
-	/*  */
-	u32			TransmitConfig;
-	u32			IntrMaskToSet[2];
-	u32			IntArray[4];
-	u32			IntrMask[4];
-	u32			SysIntArray[1];
-	u32			SysIntrMask[1];
-	u32			IntrMaskReg[2];
-	u32			IntrMaskDefault[4];
-
-	BOOLEAN		bL1OffSupport;
-	BOOLEAN	bSupportBackDoor;
-
-	u8			bDefaultAntenna;
-
-	u8			bInterruptMigration;
-	u8			bDisableTxInt;
-
-	u16			RxTag;
-#endif /* CONFIG_PCI_HCI */
-
 
 #ifdef DBG_CONFIG_ERROR_DETECT
 	struct sreset_priv srestpriv;
@@ -709,15 +599,6 @@ typedef struct hal_com_data {
 	/* For bluetooth co-existance */
 	BT_COEXIST		bt_coexist;
 #endif /* CONFIG_BT_COEXIST */
-
-#if defined(CONFIG_RTL8723B) || defined(CONFIG_RTL8703B) \
-	|| defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8723D)
-#ifndef CONFIG_PCI_HCI	/* mutual exclusive with PCI -- so they're SDIO and GSPI */
-	/* Interrupt relatd register information. */
-	u32			SysIntrStatus;
-	u32			SysIntrMask;
-#endif
-#endif /*endif CONFIG_RTL8723B	*/
 
 #ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	char	para_file_buf[MAX_PARA_FILE_BUF_LEN];
@@ -754,9 +635,6 @@ typedef struct hal_com_data {
 	BOOLEAN				bCCKinCH14;
 	BB_INIT_REGISTER	RegForRecover[5];
 
-#if defined(CONFIG_PCI_HCI) && defined(RTL8814AE_SW_BCN)
-	BOOLEAN bCorrectBCN;
-#endif
 	u32 RxGainOffset[4]; /*{2G, 5G_Low, 5G_Middle, G_High}*/
 	u8 BackUp_IG_REG_4_Chnl_Section[4]; /*{A,B,C,D}*/
 

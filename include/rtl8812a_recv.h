@@ -34,18 +34,6 @@
 		#endif
 	#endif /* !MAX_RECVBUF_SZ */
 
-#elif defined(CONFIG_PCI_HCI)
-	/* #ifndef CONFIG_MINIMAL_MEMORY_USAGE */
-	/*	#define MAX_RECVBUF_SZ (9100) */
-	/* #else */
-	#define MAX_RECVBUF_SZ (4000) /* about 4K
-	* #endif */
-
-
-#elif defined(CONFIG_SDIO_HCI)
-
-	#define MAX_RECVBUF_SZ (RX_DMA_BOUNDARY_8821 + 1)
-
 #endif
 
 
@@ -124,20 +112,10 @@
 #define SET_RX_STATUS_DESC_BUFF_ADDR_8812(__pRxDesc, __Value)	SET_BITS_TO_LE_4BYTE(__pRxDesc+24, 0, 32, __Value)
 
 
-#ifdef CONFIG_SDIO_HCI
-s32 InitRecvPriv8821AS(PADAPTER padapter);
-void FreeRecvPriv8821AS(PADAPTER padapter);
-#endif /* CONFIG_SDIO_HCI */
-
 #ifdef CONFIG_USB_HCI
 void rtl8812au_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf);
 s32 rtl8812au_init_recv_priv(PADAPTER padapter);
 void rtl8812au_free_recv_priv(PADAPTER padapter);
-#endif
-
-#ifdef CONFIG_PCI_HCI
-s32 rtl8812ae_init_recv_priv(PADAPTER padapter);
-void rtl8812ae_free_recv_priv(PADAPTER padapter);
 #endif
 
 void rtl8812_query_rx_desc_status(union recv_frame *precvframe, u8 *pdesc);

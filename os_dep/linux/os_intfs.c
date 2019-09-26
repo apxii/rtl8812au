@@ -143,11 +143,7 @@ int rtw_ht_enable = 1;
 int rtw_bw_mode = 0x21;
 int rtw_ampdu_enable = 1;/* for enable tx_ampdu , */ /* 0: disable, 0x1:enable */
 static int rtw_rx_stbc = 1;/* 0: disable, bit(0):enable 2.4g, bit(1):enable 5g, default is set to enable 2.4GHZ for IOT issue with bufflao's AP at 5GHZ */
-#if (defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8822B)) && defined(CONFIG_PCI_HCI)
-static int rtw_ampdu_amsdu = 2;/* 0: disabled, 1:enabled, 2:auto . There is an IOT issu with DLINK DIR-629 when the flag turn on */
-#else
 static int rtw_ampdu_amsdu = 0;/* 0: disabled, 1:enabled, 2:auto . There is an IOT issu with DLINK DIR-629 when the flag turn on */
-#endif
 
 static uint rtw_rx_ampdu_sz_limit_1ss[4] = CONFIG_RTW_RX_AMPDU_SZ_LIMIT_1SS;
 static uint rtw_rx_ampdu_sz_limit_1ss_num = 0;
@@ -1392,11 +1388,6 @@ static int rtw_os_ndev_alloc(_adapter *adapter)
 	SET_NETDEV_DEV(ndev, dvobj_to_dev(adapter_to_dvobj(adapter)));
 #endif
 
-#ifdef CONFIG_PCI_HCI
-	if (adapter_to_dvobj(adapter)->bdma64)
-		ndev->features |= NETIF_F_HIGHDMA;
-	ndev->irq = adapter_to_dvobj(adapter)->irq;
-#endif
 
 #if defined(CONFIG_IOCTL_CFG80211)
 	if (rtw_cfg80211_ndev_res_alloc(adapter) != _SUCCESS) {
@@ -1643,9 +1634,6 @@ u32 rtw_start_drv_threads(_adapter *padapter)
 
 
 #ifdef CONFIG_XMIT_THREAD_MODE
-#if defined(CONFIG_SDIO_HCI)
-	if (is_primary_adapter(padapter))
-#endif
 	{
 		padapter->xmitThread = kthread_run(rtw_xmit_thread, padapter, "RTW_XMIT_THREAD");
 		if (IS_ERR(padapter->xmitThread))
@@ -1695,10 +1683,6 @@ void rtw_stop_drv_threads(_adapter *padapter)
 
 #ifdef CONFIG_XMIT_THREAD_MODE
 	/* Below is to termindate tx_thread... */
-#if defined(CONFIG_SDIO_HCI)
-	/* Only wake-up primary adapter */
-	if (is_primary_adapter(padapter))
-#endif  /*SDIO_HCI */
 	{
 		if (padapter->xmitpriv.stop_req == 0) {
 			_rtw_up_sema(&padapter->xmitpriv.xmit_sema);
@@ -1844,9 +1828,6 @@ struct dvobj_priv *devobj_init(void)
 	_rtw_mutex_init(&pdvobj->setch_mutex);
 	_rtw_mutex_init(&pdvobj->setbw_mutex);
 	_rtw_mutex_init(&pdvobj->rf_read_reg_mutex);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-	_rtw_mutex_init(&pdvobj->sd_indirect_access_mutex);
-#endif
 
 #ifdef CONFIG_RTW_CUSTOMER_STR
 	_rtw_mutex_init(&pdvobj->customer_str_mutex);
@@ -1860,9 +1841,6 @@ struct dvobj_priv *devobj_init(void)
 	rtw_macid_ctl_init(&pdvobj->macid_ctl);
 	_rtw_spinlock_init(&pdvobj->cam_ctl.lock);
 	_rtw_mutex_init(&pdvobj->cam_ctl.sec_cam_access_mutex);
-#if defined(RTK_129X_PLATFORM) && defined(CONFIG_PCI_HCI)
-	_rtw_spinlock_init(&pdvobj->io_reg_lock);
-#endif
 #ifdef CONFIG_MBSSID_CAM
 	rtw_mbid_cam_init(pdvobj);
 #endif
@@ -1922,17 +1900,11 @@ void devobj_deinit(struct dvobj_priv *pdvobj)
 	_rtw_mutex_free(&pdvobj->setch_mutex);
 	_rtw_mutex_free(&pdvobj->setbw_mutex);
 	_rtw_mutex_free(&pdvobj->rf_read_reg_mutex);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-	_rtw_mutex_free(&pdvobj->sd_indirect_access_mutex);
-#endif
 
 	rtw_macid_ctl_deinit(&pdvobj->macid_ctl);
 	_rtw_spinlock_free(&pdvobj->cam_ctl.lock);
 	_rtw_mutex_free(&pdvobj->cam_ctl.sec_cam_access_mutex);
 
-#if defined(RTK_129X_PLATFORM) && defined(CONFIG_PCI_HCI)
-	_rtw_spinlock_free(&pdvobj->io_reg_lock);
-#endif
 #ifdef CONFIG_MBSSID_CAM
 	rtw_mbid_cam_deinit(pdvobj);
 #endif
@@ -2118,11 +2090,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 	}
 #endif /* CONFIG_INTEL_WIDI */
 
-#ifdef CONFIG_WAPI_SUPPORT
-	padapter->WapiSupport = true; /* set true temp, will revise according to Efuse or Registry value later. */
-	rtw_wapi_init(padapter);
-#endif
-
 #ifdef CONFIG_BR_EXT
 	_rtw_spinlock_init(&padapter->br_ext_lock);
 #endif /* CONFIG_BR_EXT */
@@ -2198,11 +2165,6 @@ void rtw_cancel_all_timer(_adapter *padapter)
 
 u8 rtw_free_drv_sw(_adapter *padapter)
 {
-
-#ifdef CONFIG_WAPI_SUPPORT
-	rtw_wapi_free(padapter);
-#endif
-
 	/* we can call rtw_p2p_enable here, but: */
 	/* 1. rtw_p2p_enable may have IO operation */
 	/* 2. rtw_p2p_enable is bundled with wext interface */
@@ -3087,9 +3049,6 @@ static int netdev_close(struct net_device *pnetdev)
 	/* padapter->rtw_wdev->iftype = NL80211_IFTYPE_MONITOR; */ /* set this at the end */
 #endif /* CONFIG_IOCTL_CFG80211 */
 
-#ifdef CONFIG_WAPI_SUPPORT
-	rtw_wapi_disable_tx(padapter);
-#endif
 #ifdef CONFIG_BT_COEXIST_SOCKET_TRX
 	if (is_primary_adapter(padapter) && (_TRUE == pHalData->EEPROMBluetoothCoexist))
 		rtw_btcoex_close_socket(padapter);
@@ -3588,24 +3547,9 @@ int rtw_suspend_wow(_adapter *padapter)
 		}
 		rtw_clr_drv_stopped(padapter);	/*for 32k command*/
 
-		/* #ifdef CONFIG_LPS */
-		/* rtw_set_ps_mode(padapter, PS_MODE_ACTIVE, 0, 0, "WOWLAN"); */
-		/* #endif */
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		/* 2. disable interrupt */
-		rtw_mi_intf_stop(padapter);
-
-		/* 2.1 clean interupt */
-		rtw_hal_clear_interrupt(padapter);
-#endif /* CONFIG_SDIO_HCI */
-
 		/* 2.2 free irq */
-		/* sdio_free_irq(adapter_to_dvobj(padapter)); */
-#if !(CONFIG_RTW_SDIO_KEEP_IRQ)
 		if (padapter->intf_free_irq)
 			padapter->intf_free_irq(adapter_to_dvobj(padapter));
-#endif
 
 #ifdef CONFIG_RUNTIME_PORT_SWITCH
 		if (rtw_port_switch_chk(padapter)) {
@@ -3707,14 +3651,6 @@ int rtw_suspend_ap_wow(_adapter *padapter)
 	}
 	rtw_clr_drv_stopped(padapter);	/*for 32k command*/
 
-#ifdef CONFIG_SDIO_HCI
-	/* 2. disable interrupt*/
-	rtw_mi_intf_stop(padapter);
-
-	/* 2.1 clean interupt */
-	rtw_hal_clear_interrupt(padapter);
-#endif /* CONFIG_SDIO_HCI */
-
 	/* 2.2 free irq */
 	if (padapter->intf_free_irq)
 		padapter->intf_free_irq(adapter_to_dvobj(padapter));
@@ -3792,14 +3728,11 @@ static int rtw_suspend_normal(_adapter *padapter)
 #endif
 	rtw_dev_unload(padapter);
 
-	/* sdio_deinit(adapter_to_dvobj(padapter)); */
 	if (padapter->intf_deinit)
 		padapter->intf_deinit(adapter_to_dvobj(padapter));
 
-#if !(CONFIG_RTW_SDIO_KEEP_IRQ)
 	if(padapter->intf_free_irq)
 		padapter->intf_free_irq(adapter_to_dvobj(padapter));
-#endif
 
 	RTW_INFO("<== "FUNC_ADPT_FMT" exit....\n", FUNC_ADPT_ARG(padapter));
 	return ret;
@@ -3936,18 +3869,10 @@ int rtw_resume_process_wow(_adapter *padapter)
 
 		pwrpriv->bFwCurrentInPSMode = _FALSE;
 
-#ifdef CONFIG_SDIO_HCI
-		rtw_mi_intf_stop(padapter);
-		rtw_hal_clear_interrupt(padapter);
-#endif /* CONFIG_SDIO_HCI */
-
-#if !(CONFIG_RTW_SDIO_KEEP_IRQ)
-		/* if (sdio_alloc_irq(adapter_to_dvobj(padapter)) != _SUCCESS) {		 */
 		if ((padapter->intf_alloc_irq) && (padapter->intf_alloc_irq(adapter_to_dvobj(padapter)) != _SUCCESS)) {
 			ret = -1;
 			goto exit;
 		}
-#endif
 
 		/* Disable WOW, set H2C command */
 		poidparam.subcode = WOWLAN_DISABLE;
@@ -4098,7 +4023,6 @@ int rtw_resume_process_ap_wow(_adapter *padapter)
 
 	rtw_hal_clear_interrupt(padapter);
 
-	/* if (sdio_alloc_irq(adapter_to_dvobj(padapter)) != _SUCCESS) {		 */
 	if ((padapter->intf_alloc_irq) && (padapter->intf_alloc_irq(adapter_to_dvobj(padapter)) != _SUCCESS)) {
 		ret = -1;
 		goto exit;
@@ -4225,19 +4149,15 @@ static int rtw_resume_process_normal(_adapter *padapter)
 
 	RTW_INFO("==> "FUNC_ADPT_FMT" entry....\n", FUNC_ADPT_ARG(padapter));
 	/* interface init */
-	/* if (sdio_init(adapter_to_dvobj(padapter)) != _SUCCESS) */
 	if ((padapter->intf_init) && (padapter->intf_init(adapter_to_dvobj(padapter)) != _SUCCESS)) {
 		ret = -1;
 		goto exit;
 	}
 	rtw_hal_disable_interrupt(padapter);
-#if !(CONFIG_RTW_SDIO_KEEP_IRQ)
-	/* if (sdio_alloc_irq(adapter_to_dvobj(padapter)) != _SUCCESS) */
 	if ((padapter->intf_alloc_irq) && (padapter->intf_alloc_irq(adapter_to_dvobj(padapter)) != _SUCCESS)) {
 		ret = -1;
 		goto exit;
 	}
-#endif
 
 	rtw_mi_reset_drv_sw(padapter);
 

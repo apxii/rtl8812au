@@ -207,7 +207,7 @@ struct _odm_ra_info_ {
 	u8 pt_mode_ss;  /* decide whitch rate should do PT */
 	u8 ra_stage;  /* StageRA, decide how many times RA will be done between PT */
 	u8 pt_smooth_factor;
-#if (DM_ODM_SUPPORT_TYPE == ODM_AP) &&	((DEV_BUS_TYPE == RT_USB_INTERFACE) || (DEV_BUS_TYPE == RT_SDIO_INTERFACE))
+#if (DM_ODM_SUPPORT_TYPE == ODM_AP) &&	((DEV_BUS_TYPE == RT_USB_INTERFACE))
 	u8 rate_down_counter;
 	u8 rate_up_counter;
 	u8 rate_direction;

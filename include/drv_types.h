@@ -114,10 +114,6 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 	#include <rtw_tdls.h>
 #endif /* CONFIG_TDLS */
 
-#ifdef CONFIG_WAPI_SUPPORT
-	#include <rtw_wapi.h>
-#endif /* CONFIG_WAPI_SUPPORT */
-
 #ifdef CONFIG_DRVEXT_MODULE
 	#include <drvext_api.h>
 #endif /* CONFIG_DRVEXT_MODULE */
@@ -129,10 +125,6 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #ifdef CONFIG_BR_EXT
 	#include <rtw_br_ext.h>
 #endif /* CONFIG_BR_EXT */
-
-#ifdef CONFIG_IOL
-	#include <rtw_iol.h>
-#endif /* CONFIG_IOL */
 
 #include <linux/ip.h>
 #include <linux/if_ether.h>
@@ -298,10 +290,6 @@ struct registry_priv {
 	u8	max_roaming_times; /* the max number driver will try to roaming */
 #endif
 
-#ifdef CONFIG_IOL
-	u8 fw_iol; /* enable iol without other concern */
-#endif
-
 #ifdef CONFIG_80211D
 	u8 enable80211d;
 #endif
@@ -440,17 +428,6 @@ typedef struct rtw_if_operations {
 				 size_t len, bool fixed);
 } RTW_IF_OPS, *PRTW_IF_OPS;
 
-#ifdef CONFIG_SDIO_HCI
-	#include <drv_types_sdio.h>
-	#define INTF_DATA	SDIO_DATA
-	#define INTF_OPS	PRTW_IF_OPS
-#elif defined(CONFIG_GSPI_HCI)
-	#include <drv_types_gspi.h>
-	#define INTF_DATA GSPI_DATA
-#elif defined(CONFIG_PCI_HCI)
-	#include <drv_types_pci.h>
-#endif
-
 #ifdef CONFIG_CONCURRENT_MODE
 	#define is_primary_adapter(adapter) (adapter->adapter_type == PRIMARY_ADAPTER)
 	#define is_vir_adapter(adapter) (adapter->adapter_type == VIRTUAL_ADAPTER)
@@ -496,8 +473,6 @@ struct rx_logs {
 	u32 core_rx_pre_ctrl;
 	u32 core_rx_pre_ctrl_err;
 	u32 core_rx_pre_data;
-	u32 core_rx_pre_data_wapi_seq_err;
-	u32 core_rx_pre_data_wapi_key_err;
 	u32 core_rx_pre_data_handled;
 	u32 core_rx_pre_data_err;
 	u32 core_rx_pre_data_unknown;
@@ -509,7 +484,6 @@ struct rx_logs {
 	u32 core_rx_post_decrypt_wep;
 	u32 core_rx_post_decrypt_tkip;
 	u32 core_rx_post_decrypt_aes;
-	u32 core_rx_post_decrypt_wapi;
 	u32 core_rx_post_decrypt_hw;
 	u32 core_rx_post_decrypt_unknown;
 	u32 core_rx_post_decrypt_err;
@@ -606,12 +580,6 @@ struct int_logs {
 #endif /* CONFIG_DBG_COUNTER */
 
 struct debug_priv {
-	u32 dbg_sdio_free_irq_error_cnt;
-	u32 dbg_sdio_alloc_irq_error_cnt;
-	u32 dbg_sdio_free_irq_cnt;
-	u32 dbg_sdio_alloc_irq_cnt;
-	u32 dbg_sdio_deinit_error_cnt;
-	u32 dbg_sdio_init_error_cnt;
 	u32 dbg_suspend_error_cnt;
 	u32 dbg_suspend_cnt;
 	u32 dbg_resume_cnt;
@@ -841,9 +809,6 @@ struct dvobj_priv {
 	_mutex setch_mutex;
 	_mutex setbw_mutex;
 	_mutex rf_read_reg_mutex;
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-	_mutex sd_indirect_access_mutex;
-#endif
 
 	unsigned char	oper_channel; /* saved channel info when call set_channel_bw */
 	unsigned char	oper_bwmode;
@@ -905,7 +870,6 @@ struct dvobj_priv {
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
 	u8 default_port_id;
 #endif
-	/*-------- below is for SDIO INTERFACE --------*/
 
 #ifdef INTF_DATA
 	INTF_DATA intf_data;
@@ -1118,12 +1082,6 @@ struct _ADAPTER {
 #ifdef CONFIG_TDLS
 	struct tdls_info	tdlsinfo;
 #endif /* CONFIG_TDLS */
-
-#ifdef CONFIG_WAPI_SUPPORT
-	u8	WapiSupport;
-	RT_WAPI_T	wapiInfo;
-#endif
-
 
 #ifdef CONFIG_WFD
 	struct wifi_display_info wfd_info;
@@ -1406,24 +1364,6 @@ int rtw_suspend_free_assoc_resource(_adapter *padapter);
 	#include <usb_osintf.h>
 	#include <usb_ops.h>
 	#include <usb_hal.h>
-#endif
-
-#ifdef CONFIG_SDIO_HCI
-	#include <sdio_osintf.h>
-	#include <sdio_ops.h>
-	#include <sdio_hal.h>
-#endif
-
-#ifdef CONFIG_GSPI_HCI
-	#include <gspi_osintf.h>
-	#include <gspi_ops.h>
-	#include <gspi_hal.h>
-#endif
-
-#ifdef CONFIG_PCI_HCI
-	#include <pci_osintf.h>
-	#include <pci_ops.h>
-	#include <pci_hal.h>
 #endif
 
 #endif /* __DRV_TYPES_H__ */

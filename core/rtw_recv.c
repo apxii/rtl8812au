@@ -430,20 +430,12 @@ sint rtw_enqueue_recvbuf_to_head(struct recv_buf *precvbuf, _queue *queue)
 sint rtw_enqueue_recvbuf(struct recv_buf *precvbuf, _queue *queue)
 {
 	_irqL irqL;
-#ifdef CONFIG_SDIO_HCI
-	_enter_critical_bh(&queue->lock, &irqL);
-#else
 	_enter_critical_ex(&queue->lock, &irqL);
-#endif/*#ifdef CONFIG_SDIO_HCI*/
 
 	rtw_list_delete(&precvbuf->list);
 
 	rtw_list_insert_tail(&precvbuf->list, get_list_head(queue));
-#ifdef CONFIG_SDIO_HCI
-	_exit_critical_bh(&queue->lock, &irqL);
-#else
 	_exit_critical_ex(&queue->lock, &irqL);
-#endif/*#ifdef CONFIG_SDIO_HCI*/
 	return _SUCCESS;
 
 }
@@ -454,11 +446,7 @@ struct recv_buf *rtw_dequeue_recvbuf(_queue *queue)
 	struct recv_buf *precvbuf;
 	_list	*plist, *phead;
 
-#ifdef CONFIG_SDIO_HCI
-	_enter_critical_bh(&queue->lock, &irqL);
-#else
 	_enter_critical_ex(&queue->lock, &irqL);
-#endif/*#ifdef CONFIG_SDIO_HCI*/
 
 	if (_rtw_queue_empty(queue) == _TRUE)
 		precvbuf = NULL;
@@ -473,11 +461,7 @@ struct recv_buf *rtw_dequeue_recvbuf(_queue *queue)
 
 	}
 
-#ifdef CONFIG_SDIO_HCI
-	_exit_critical_bh(&queue->lock, &irqL);
-#else
 	_exit_critical_ex(&queue->lock, &irqL);
-#endif/*#ifdef CONFIG_SDIO_HCI*/
 
 	return precvbuf;
 
@@ -655,12 +639,6 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 			DBG_COUNTER(padapter->rx_logs.core_rx_post_decrypt_aes);
 			res = rtw_aes_decrypt(padapter, (u8 *)precv_frame);
 			break;
-#ifdef CONFIG_WAPI_SUPPORT
-		case _SMS4_:
-			DBG_COUNTER(padapter->rx_logs.core_rx_post_decrypt_wapi);
-			rtw_sms4_decrypt(padapter, (u8 *)precv_frame);
-			break;
-#endif
 		default:
 			break;
 		}
@@ -1995,14 +1973,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 #ifdef CONFIG_TDLS
 	struct tdls_info *ptdlsinfo = &adapter->tdlsinfo;
 #endif /* CONFIG_TDLS */
-#ifdef CONFIG_WAPI_SUPPORT
-	PRT_WAPI_T	pWapiInfo = &adapter->wapiInfo;
-	struct recv_frame_hdr *phdr = &precv_frame->u.hdr;
-	u8 wai_pkt = 0;
-	u16 sc;
-	u8	external_len = 0;
-#endif
-
 
 #ifdef CONFIG_FIND_BEST_CHANNEL
 	if (pmlmeext->sitesurvey_res.state == SCAN_PROCESS) {
@@ -2051,10 +2021,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	pattrib->mdata = GetMData(ptr);
 	pattrib->privacy = GetPrivacy(ptr);
 	pattrib->order = GetOrder(ptr);
-#ifdef CONFIG_WAPI_SUPPORT
-	sc = (pattrib->seq_num << 4) | pattrib->frag_num;
-#endif
-
 	{
 		u8 bDumpRxPkt = 0;
 
@@ -2093,36 +2059,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		break;
 	case WIFI_DATA_TYPE: /* data */
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_data);
-#ifdef CONFIG_WAPI_SUPPORT
-		if (pattrib->qos)
-			external_len = 2;
-		else
-			external_len = 0;
-
-		wai_pkt = rtw_wapi_is_wai_packet(adapter, ptr);
-
-		phdr->bIsWaiPacket = wai_pkt;
-
-		if (wai_pkt != 0) {
-			if (sc != adapter->wapiInfo.wapiSeqnumAndFragNum)
-				adapter->wapiInfo.wapiSeqnumAndFragNum = sc;
-			else {
-				retval = _FAIL;
-				DBG_COUNTER(adapter->rx_logs.core_rx_pre_data_wapi_seq_err);
-				break;
-			}
-		} else {
-
-			if (rtw_wapi_drop_for_key_absent(adapter, get_addr2_ptr(ptr))) {
-				retval = _FAIL;
-				WAPI_TRACE(WAPI_RX, "drop for key absent for rx\n");
-				DBG_COUNTER(adapter->rx_logs.core_rx_pre_data_wapi_key_err);
-				break;
-			}
-		}
-
-#endif
-
 		pattrib->qos = (subtype & BIT(7)) ? 1 : 0;
 		retval = validate_recv_data_frame(adapter, precv_frame);
 		if (retval == _FAIL) {
@@ -2270,65 +2206,6 @@ exiting:
 
 }
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#ifdef PLATFORM_LINUX
-static void recvframe_expand_pkt(
-	PADAPTER padapter,
-	union recv_frame *prframe)
-{
-	struct recv_frame_hdr *pfhdr;
-	_pkt *ppkt;
-	u8 shift_sz;
-	u32 alloc_sz;
-	u8 *ptr;
-
-
-	pfhdr = &prframe->u.hdr;
-
-	/*	6 is for IP header 8 bytes alignment in QoS packet case. */
-	if (pfhdr->attrib.qos)
-		shift_sz = 6;
-	else
-		shift_sz = 0;
-
-	/* for first fragment packet, need to allocate */
-	/* (1536 + RXDESC_SIZE + drvinfo_sz) to reassemble packet */
-	/*	8 is for skb->data 8 bytes alignment.
-	*	alloc_sz = _RND(1536 + RXDESC_SIZE + pfhdr->attrib.drvinfosize + shift_sz + 8, 128); */
-	alloc_sz = 1664; /* round (1536 + 24 + 32 + shift_sz + 8) to 128 bytes alignment */
-
-	/* 3 1. alloc new skb */
-	/* prepare extra space for 4 bytes alignment */
-	ppkt = rtw_skb_alloc(alloc_sz);
-
-	if (!ppkt)
-		return; /* no way to expand */
-
-	/* 3 2. Prepare new skb to replace & release old skb */
-	/* force ppkt->data at 8-byte alignment address */
-	skb_reserve(ppkt, 8 - ((SIZE_PTR)ppkt->data & 7));
-	/* force ip_hdr at 8-byte alignment address according to shift_sz */
-	skb_reserve(ppkt, shift_sz);
-
-	/* copy data to new pkt */
-	ptr = skb_put(ppkt, pfhdr->len);
-	if (ptr)
-		_rtw_memcpy(ptr, pfhdr->rx_data, pfhdr->len);
-
-	rtw_skb_free(pfhdr->pkt);
-
-	/* attach new pkt to recvframe */
-	pfhdr->pkt = ppkt;
-	pfhdr->rx_head = ppkt->head;
-	pfhdr->rx_data = ppkt->data;
-	pfhdr->rx_tail = skb_tail_pointer(ppkt);
-	pfhdr->rx_end = skb_end_pointer(ppkt);
-}
-#else
-#warning "recvframe_expand_pkt not implement, defrag may crash system"
-#endif
-#endif
-
 /* perform defrag */
 union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q);
 union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
@@ -2358,12 +2235,6 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 
 		return NULL;
 	}
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#ifndef CONFIG_SDIO_RX_COPY
-	recvframe_expand_pkt(adapter, prframe);
-#endif
-#endif
 
 	curfragnum++;
 
@@ -3723,10 +3594,6 @@ static int recv_func_posthandle(_adapter *padapter, union recv_frame *prframe)
 	}
 
 	count_rx_stats(padapter, prframe, NULL);
-
-#ifdef CONFIG_WAPI_SUPPORT
-	rtw_wapi_update_info(padapter, prframe);
-#endif
 
 #ifdef CONFIG_80211N_HT
 	ret = process_recv_indicatepkts(padapter, prframe);

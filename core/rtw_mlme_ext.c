@@ -3060,12 +3060,6 @@ unsigned int OnAssocRsp(_adapter *padapter, union recv_frame *precv_frame)
 #endif
 			break;
 
-#ifdef CONFIG_WAPI_SUPPORT
-		case _WAPI_IE_:
-			pWapiIE = pIE;
-			break;
-#endif
-
 		case _HT_CAPABILITY_IE_:	/* HT caps */
 			HT_caps_handler(padapter, pIE);
 			break;
@@ -3101,10 +3095,6 @@ unsigned int OnAssocRsp(_adapter *padapter, union recv_frame *precv_frame)
 
 		i += (pIE->Length + 2);
 	}
-
-#ifdef CONFIG_WAPI_SUPPORT
-	rtw_wapi_on_assoc_ok(padapter, pIE);
-#endif
 
 	pmlmeinfo->state &= (~WIFI_FW_ASSOC_STATE);
 	pmlmeinfo->state |= WIFI_FW_ASSOC_SUCCESS;
@@ -8931,12 +8921,6 @@ void _issue_assocreq(_adapter *padapter, u8 is_reassoc)
 	if (pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_REALTEK)
 		pframe = rtw_set_ie(pframe, _VENDOR_SPECIFIC_IE_, 6 , REALTEK_96B_IE, &(pattrib->pktlen));
 
-
-#ifdef CONFIG_WAPI_SUPPORT
-	rtw_build_assoc_req_wapi_ie(padapter, pframe, pattrib);
-#endif
-
-
 #ifdef CONFIG_P2P
 
 #ifdef CONFIG_IOCTL_CFG80211
@@ -9830,11 +9814,7 @@ static int issue_action_ba(_adapter *padapter, unsigned char *raddr, unsigned ch
 			} while (pmlmeinfo->dialogToken == 0);
 			pframe = rtw_set_fixed_ie(pframe, 1, &(pmlmeinfo->dialogToken), &(pattrib->pktlen));
 
-#if defined(CONFIG_RTL8188E) && defined(CONFIG_SDIO_HCI)
-			BA_para_set = (0x0802 | ((tid & 0xf) << 2)); /* immediate ack & 16 buffer size */
-#else
 			BA_para_set = (0x1002 | ((tid & 0xf) << 2)); /* immediate ack & 64 buffer size */
-#endif
 
 #ifdef CONFIG_TX_AMSDU
 			if (padapter->tx_amsdu >= 1) /* TX AMSDU  enabled */
@@ -10479,30 +10459,7 @@ unsigned int send_beacon(_adapter *padapter)
 	u8	bxmitok = _FALSE;
 	int	issue = 0;
 	int poll = 0;
-#if defined(CONFIG_PCI_HCI) && defined(RTL8814AE_SW_BCN)
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-#endif
 
-#ifdef CONFIG_PCI_HCI
-	/* RTW_INFO("%s\n", __FUNCTION__); */
-
-	rtw_hal_set_hwreg(padapter, HW_VAR_BCN_VALID, NULL);
-
-	/* 8192EE Port select for Beacon DL */
-	rtw_hal_set_hwreg(padapter, HW_VAR_DL_BCN_SEL, NULL);
-
-	issue_beacon(padapter, 0);
-
-#ifdef RTL8814AE_SW_BCN
-	if (pHalData->bCorrectBCN != 0)
-		RTW_INFO("%s, line%d, Warnning, pHalData->bCorrectBCN != 0\n", __func__, __LINE__);
-	pHalData->bCorrectBCN = 1;
-#endif
-
-	return _SUCCESS;
-#endif
-
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 	u32 start = rtw_get_current_time();
 
 	rtw_hal_set_hwreg(padapter, HW_VAR_BCN_VALID, NULL);
@@ -10537,9 +10494,6 @@ unsigned int send_beacon(_adapter *padapter)
 
 		return _SUCCESS;
 	}
-
-#endif
-
 }
 
 /****************************************************************************
@@ -10863,12 +10817,6 @@ void start_clnt_join(_adapter *padapter)
 
 		val8 = (pmlmeinfo->auth_algo == dot11AuthAlgrthm_8021X) ? 0xcc : 0xcf;
 
-#ifdef CONFIG_WAPI_SUPPORT
-		if (padapter->wapiInfo.bWapiEnable && pmlmeinfo->auth_algo == dot11AuthAlgrthm_WAPI) {
-			/* Disable TxUseDefaultKey, RxUseDefaultKey, RxBroadcastUseDefaultKey. */
-			val8 = 0x4c;
-		}
-#endif
 		rtw_hal_set_hwreg(padapter, HW_VAR_SEC_CFG, (u8 *)(&val8));
 
 #ifdef CONFIG_DEAUTH_BEFORE_CONNECT
@@ -13204,10 +13152,6 @@ u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf)
 	rtw_antenna_select_cmd(padapter, pparm->network.PhyInfo.Optimum_antenna, _FALSE);
 #endif
 
-#ifdef CONFIG_WAPI_SUPPORT
-	rtw_wapi_clear_all_cam_entry(padapter);
-#endif
-
 	rtw_joinbss_reset(padapter);
 
 	pmlmeinfo->ERP_enable = 0;
@@ -14797,9 +14741,6 @@ u8 chk_bmc_sleepq_hdl(_adapter *padapter, unsigned char *pbuf)
 		return H2C_SUCCESS;
 
 	if ((pstapriv->tim_bitmap & BIT(0)) && (psta_bmc->sleepq_len > 0)) {
-#ifndef CONFIG_PCI_HCI
-		rtw_msleep_os(10);/* 10ms, ATIM(HIQ) Windows */
-#endif
 		/* _enter_critical_bh(&psta_bmc->sleep_q.lock, &irqL); */
 		_enter_critical_bh(&pxmitpriv->lock, &irqL);
 

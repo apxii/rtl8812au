@@ -695,13 +695,6 @@ int rtw_recv_indicatepkt(_adapter *padapter, union recv_frame *precv_frame)
 		goto _recv_indicatepkt_drop;
 #endif
 
-#ifdef CONFIG_WAPI_SUPPORT
-	if (rtw_wapi_check_for_drop(padapter, precv_frame)) {
-		WAPI_TRACE(WAPI_ERR, "%s(): Rx Reorder Drop case!!\n", __FUNCTION__);
-		goto _recv_indicatepkt_drop;
-	}
-#endif
-
 	skb = precv_frame->u.hdr.pkt;
 	if (skb == NULL) {
 		goto _recv_indicatepkt_drop;
@@ -814,10 +807,6 @@ void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
 
 
 #endif
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	precvbuf->pskb = NULL;
-#endif
-
 }
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 static void _rtw_reordering_ctrl_timeout_handler(void *FunctionContext)

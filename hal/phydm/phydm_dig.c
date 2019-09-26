@@ -2046,15 +2046,7 @@ odm_mpt_dig_callback(
 	struct PHY_DM_STRUCT		*p_dm_odm = &p_hal_data->DM_OutSrc;
 
 
-#if DEV_BUS_TYPE == RT_PCI_INTERFACE
-#if USE_WORKITEM
 	odm_schedule_work_item(&p_dm_odm->mpt_dig_workitem);
-#else
-	ODM_MPT_DIG(p_dm_odm);
-#endif
-#else
-	odm_schedule_work_item(&p_dm_odm->mpt_dig_workitem);
-#endif
 
 }
 

@@ -1229,12 +1229,6 @@ void LeaveAllPowerSaveModeDirect(PADAPTER Adapter)
 			} else
 #endif
 			{
-#if defined(CONFIG_FWLPS_IN_IPS) || defined(CONFIG_SWLPS_IN_IPS) || defined(CONFIG_RTL8188E)
-#ifdef CONFIG_IPS
-				if (_FALSE == ips_leave(pri_padapter))
-					RTW_INFO("======> ips_leave fail.............\n");
-#endif
-#endif /* CONFIG_SWLPS_IN_IPS || CONFIG_RTL8188E */
 			}
 		}
 	}
@@ -1301,12 +1295,6 @@ void LeaveAllPowerSaveMode(IN PADAPTER Adapter)
 			} else
 #endif
 			{
-#if defined(CONFIG_FWLPS_IN_IPS) || defined(CONFIG_SWLPS_IN_IPS) || defined(CONFIG_RTL8188E)
-#ifdef CONFIG_IPS
-				if (_FALSE == ips_leave(Adapter))
-					RTW_INFO("======> ips_leave fail.............\n");
-#endif
-#endif /* CONFIG_SWLPS_IN_IPS || CONFIG_RTL8188E */
 			}
 		}
 	}
@@ -2197,9 +2185,7 @@ void rtw_unregister_early_suspend(struct pwrctrl_priv *pwrpriv)
 #endif /* CONFIG_HAS_EARLYSUSPEND */
 
 #ifdef CONFIG_ANDROID_POWER
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	extern int rtw_resume_process(PADAPTER padapter);
-#endif
+extern int rtw_resume_process(PADAPTER padapter);
 static void rtw_early_suspend(android_early_suspend_t *h)
 {
 	struct pwrctrl_priv *pwrpriv = container_of(h, struct pwrctrl_priv, early_suspend);
@@ -2216,10 +2202,8 @@ static void rtw_late_resume(android_early_suspend_t *h)
 
 	RTW_INFO("%s\n", __FUNCTION__);
 	if (pwrpriv->do_late_resume) {
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 		rtw_set_do_late_resume(pwrpriv, _FALSE);
 		rtw_resume_process(adapter);
-#endif
 	}
 }
 

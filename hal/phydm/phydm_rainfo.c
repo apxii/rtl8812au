@@ -1483,7 +1483,7 @@ odm_rate_adaptive_mask_init(
 
 	p_odm_ra->high_rssi_thresh = 50;
 #if (DM_ODM_SUPPORT_TYPE == ODM_AP) && \
-	((DEV_BUS_TYPE == RT_USB_INTERFACE) || (DEV_BUS_TYPE == RT_SDIO_INTERFACE))
+	((DEV_BUS_TYPE == RT_USB_INTERFACE))
 	p_odm_ra->low_rssi_thresh = 23;
 #else
 	p_odm_ra->low_rssi_thresh = 20;
@@ -2711,39 +2711,7 @@ phydm_update_pwr_track(
 	p_dm_odm->tx_rate = rate;
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-#if DEV_BUS_TYPE == RT_PCI_INTERFACE
-#if USE_WORKITEM
 	odm_schedule_work_item(&p_dm_odm->ra_rpt_workitem);
-#else
-	if (p_dm_odm->support_ic_type == ODM_RTL8821) {
-#if (RTL8821A_SUPPORT == 1)
-		odm_tx_pwr_track_set_pwr8821a(p_dm_odm, MIX_MODE, ODM_RF_PATH_A, 0);
-#endif
-	} else if (p_dm_odm->support_ic_type == ODM_RTL8812) {
-		for (path_idx = ODM_RF_PATH_A; path_idx < MAX_PATH_NUM_8812A; path_idx++) {
-#if (RTL8812A_SUPPORT == 1)
-			odm_tx_pwr_track_set_pwr8812a(p_dm_odm, MIX_MODE, path_idx, 0);
-#endif
-		}
-	} else if (p_dm_odm->support_ic_type == ODM_RTL8723B) {
-#if (RTL8723B_SUPPORT == 1)
-		odm_tx_pwr_track_set_pwr_8723b(p_dm_odm, MIX_MODE, ODM_RF_PATH_A, 0);
-#endif
-	} else if (p_dm_odm->support_ic_type == ODM_RTL8192E) {
-		for (path_idx = ODM_RF_PATH_A; path_idx < MAX_PATH_NUM_8192E; path_idx++) {
-#if (RTL8192E_SUPPORT == 1)
-			odm_tx_pwr_track_set_pwr92_e(p_dm_odm, MIX_MODE, path_idx, 0);
-#endif
-		}
-	} else if (p_dm_odm->support_ic_type == ODM_RTL8188E) {
-#if (RTL8188E_SUPPORT == 1)
-		odm_tx_pwr_track_set_pwr88_e(p_dm_odm, MIX_MODE, ODM_RF_PATH_A, 0);
-#endif
-	}
-#endif
-#else
-	odm_schedule_work_item(&p_dm_odm->ra_rpt_workitem);
-#endif
 #endif
 
 }

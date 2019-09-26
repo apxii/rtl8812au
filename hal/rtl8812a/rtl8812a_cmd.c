@@ -679,11 +679,7 @@ static void ConstructGTKResponse(
 	SetSeqNum(pwlanhdr, 0);
 	set_duration(pwlanhdr, 0);
 
-#ifdef CONFIG_WAPI_SUPPORT
-	*pLength = sMacHdrLng;
-#else
 	*pLength = 24;
-#endif /* CONFIG_WAPI_SUPPORT */
 
 	/* YJ,del,120503 */
 	/* ------------------------------------------------------------------------- */
@@ -701,11 +697,6 @@ static void ConstructGTKResponse(
 	case _AES_:
 		EncryptionHeadOverhead = 8;
 		break;
-#ifdef CONFIG_WAPI_SUPPORT
-	case _SMS4_:
-		EncryptionHeadOverhead = 18;
-		break;
-#endif /* CONFIG_WAPI_SUPPORT */
 	default:
 		EncryptionHeadOverhead = 0;
 	}
@@ -939,11 +930,7 @@ static void SetFwRsvdPagePkt_8812(PADAPTER padapter, BOOLEAN bDLFinished)
 		update_mgntframe_attrib(padapter, pattrib);
 		pattrib->qsel = QSLT_BEACON;
 		pattrib->pktlen = pattrib->last_txcmdsz = TotalPacketLen - TxDescLen;
-#ifdef CONFIG_PCI_HCI
-		dump_mgntframe(padapter, pcmdframe);
-#else
 		dump_mgntframe_and_wait(padapter, pcmdframe, 100);
-#endif
 	}
 
 	if (!bDLFinished) {
@@ -1315,11 +1302,6 @@ void rtl8812_set_FwJoinBssReport_cmd(PADAPTER padapter, u8 mstatus)
 		/* Do not enable HW DMA BCN or it will cause Pcie interface hang by timing issue. 2011.11.24. by tynli.*/
 		/*if(!padapter->bEnterPnpSleep)*/
 		{
-#ifndef CONFIG_PCI_HCI
-			/* Clear CR[8] or beacon packet will not be send to TxBuf anymore.*/
-			pHalData->RegCR_1 &= (~BIT0);
-			rtw_write8(padapter,  REG_CR + 1 , pHalData->RegCR_1);
-#endif
 		}
 	}
 
@@ -1351,9 +1333,6 @@ C2HTxBeamformingHandler_8812(
 	}
 #else /*(BEAMFORMING_SUPPORT == 0) - drv beamforming*/
 	beamforming_check_sounding_success(Adapter, status);
-#if (0)/*DEV_BUS_TYPE == RT_PCI_INTERFACE)*/
-	beamforming_end_fw(Adapter, status);
-#endif
 #endif
 
 #endif /*#ifdef CONFIG_BEAMFORMING*/
@@ -1560,11 +1539,7 @@ static void SetFwRsvdPagePkt_BTCoex(PADAPTER padapter)
 		update_mgntframe_attrib(padapter, pattrib);
 		pattrib->qsel = QSLT_BEACON;
 		pattrib->pktlen = pattrib->last_txcmdsz = TotalPacketLen - TxDescOffset;
-#ifdef CONFIG_PCI_HCI
-		dump_mgntframe(padapter, pcmdframe);
-#else
 		dump_mgntframe_and_wait(padapter, pcmdframe, 100);
-#endif
 	}
 
 	RTW_INFO("%s: Set RSVD page location to Fw ,TotalPacketLen(%d), TotalPageNum(%d)\n", __FUNCTION__, TotalPacketLen, TotalPageNum);
@@ -1671,15 +1646,6 @@ void rtl8812a_download_BTCoex_AP_mode_rsvd_page(PADAPTER padapter)
 		rtw_write8(padapter, REG_FWHW_TXQ_CTRL + 2, pHalData->RegFwHwTxQCtrl | BIT(6));
 		pHalData->RegFwHwTxQCtrl |= BIT(6);
 	}
-
-#ifndef CONFIG_PCI_HCI
-	/* Clear CR[8] or beacon packet will not be send to TxBuf anymore. */
-	v8 = rtw_read8(padapter, REG_CR + 1);
-	v8 &= ~BIT(0); /* ~ENSWBCN */
-	rtw_write8(padapter, REG_CR + 1, v8);
-#endif
-
-
 }
 
 #endif /* CONFIG_BT_COEXIST */

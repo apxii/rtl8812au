@@ -28,10 +28,6 @@
 #define	ODM_ADSL		0x10	/*BIT4*/
 #define	ODM_IOT		0x20	/*BIT5*/
 
-/*Deifne HW endian support*/
-#define	ODM_ENDIAN_BIG	0
-#define	ODM_ENDIAN_LITTLE	1
-
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 	#define GET_PDM_ODM(__padapter)	((struct PHY_DM_STRUCT*)(&((GET_HAL_DATA(__padapter))->DM_OutSrc)))
 #elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
@@ -39,9 +35,7 @@
 #endif
 
 #if (DM_ODM_SUPPORT_TYPE != ODM_WIN)
-	#define	RT_PCI_INTERFACE				1
 	#define	RT_USB_INTERFACE				2
-	#define	RT_SDIO_INTERFACE				3
 #endif
 
 enum hal_status {
@@ -162,10 +156,6 @@ enum rt_spinlock_type {
 	#endif
 
 
-	#ifdef CONFIG_PCI_HCI
-		#define DEV_BUS_TYPE		RT_PCI_INTERFACE
-	#endif
-
 	#define _TRUE				1
 	#define _FALSE				0
 
@@ -182,26 +172,11 @@ enum rt_spinlock_type {
 	#include <drv_types.h>
 	#ifdef CONFIG_USB_HCI
 		#define DEV_BUS_TYPE	RT_USB_INTERFACE
-	#elif defined(CONFIG_PCI_HCI)
-		#define DEV_BUS_TYPE	RT_PCI_INTERFACE
-	#elif defined(CONFIG_SDIO_HCI)
-		#define DEV_BUS_TYPE	RT_SDIO_INTERFACE
-	#elif defined(CONFIG_GSPI_HCI)
-		#define DEV_BUS_TYPE	RT_SDIO_INTERFACE
-	#endif
-
-
-	#if defined(__LITTLE_ENDIAN)
-		#define	ODM_ENDIAN_TYPE			ODM_ENDIAN_LITTLE
-	#else
-		#define	ODM_ENDIAN_TYPE			ODM_ENDIAN_BIG
-	#endif
 
 	#define	boolean	bool
 
 	#define true	_TRUE
 	#define false	_FALSE
-
 
 	#define SET_TX_DESC_ANTSEL_A_88E(__ptx_desc, __value) SET_BITS_TO_LE_4BYTE(__ptx_desc+8, 24, 1, __value)
 	#define SET_TX_DESC_ANTSEL_B_88E(__ptx_desc, __value) SET_BITS_TO_LE_4BYTE(__ptx_desc+8, 25, 1, __value)

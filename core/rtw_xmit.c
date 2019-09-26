@@ -184,13 +184,6 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 				goto exit;
 		}
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		pxmitbuf->phead = pxmitbuf->pbuf;
-		pxmitbuf->pend = pxmitbuf->pbuf + MAX_XMITBUF_SZ;
-		pxmitbuf->len = 0;
-		pxmitbuf->pdata = pxmitbuf->ptail = pxmitbuf->phead;
-#endif
-
 		pxmitbuf->flags = XMIT_VO_QUEUE;
 
 		rtw_list_insert_tail(&pxmitbuf->list, &(pxmitpriv->free_xmitbuf_queue.queue));
@@ -263,13 +256,6 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 			goto exit;
 		}
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		pxmitbuf->phead = pxmitbuf->pbuf;
-		pxmitbuf->pend = pxmitbuf->pbuf + MAX_XMIT_EXTBUF_SZ;
-		pxmitbuf->len = 0;
-		pxmitbuf->pdata = pxmitbuf->ptail = pxmitbuf->phead;
-#endif
-
 		rtw_list_insert_tail(&pxmitbuf->list, &(pxmitpriv->free_xmit_extbuf_queue.queue));
 #ifdef DBG_XMIT_BUF_EXT
 		pxmitbuf->no = i;
@@ -295,12 +281,6 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 				goto exit;
 			}
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-			pxmitbuf->phead = pxmitbuf->pbuf;
-			pxmitbuf->pend = pxmitbuf->pbuf + MAX_CMDBUF_SZ;
-			pxmitbuf->len = 0;
-			pxmitbuf->pdata = pxmitbuf->ptail = pxmitbuf->phead;
-#endif
 			pxmitbuf->alloc_sz = MAX_CMDBUF_SZ + XMITBUF_ALIGN_SZ;
 		}
 	}
@@ -961,11 +941,6 @@ static s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib
 	} else {
 		GET_ENCRY_ALGO(psecuritypriv, psta, pattrib->encrypt, bmcast);
 
-#ifdef CONFIG_WAPI_SUPPORT
-		if (pattrib->ether_type == 0x88B4)
-			pattrib->encrypt = _NO_PRIVACY_;
-#endif
-
 		switch (psecuritypriv->dot11AuthAlgrthm) {
 		case dot11AuthAlgrthm_Open:
 		case dot11AuthAlgrthm_Shared:
@@ -1038,13 +1013,6 @@ static s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib
 
 		break;
 
-#ifdef CONFIG_WAPI_SUPPORT
-	case _SMS4_:
-		pattrib->iv_len = 18;
-		pattrib->icv_len = 16;
-		rtw_wapi_get_iv(padapter, pattrib->ra, pattrib->iv);
-		break;
-#endif
 	default:
 		pattrib->iv_len = 0;
 		pattrib->icv_len = 0;
@@ -1068,11 +1036,6 @@ static s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib
 
 	if (pattrib->encrypt && bmcast && _rtw_camctl_chk_flags(padapter, SEC_STATUS_STA_PK_GK_CONFLICT_DIS_BMC_SEARCH))
 		pattrib->bswenc = _TRUE;
-
-#ifdef CONFIG_WAPI_SUPPORT
-	if (pattrib->encrypt == _SMS4_)
-		pattrib->bswenc = _FALSE;
-#endif
 
 exit:
 
@@ -1380,13 +1343,9 @@ static s32 update_attrib(_adapter *padapter, _pkt *pkt, struct pkt_attrib *pattr
 
 #ifdef CONFIG_LPS
 	/* If EAPOL , ARP , OR DHCP packet, driver must be in active mode. */
-#ifdef CONFIG_WAPI_SUPPORT
-	if ((pattrib->ether_type == 0x88B4) || (pattrib->ether_type == 0x0806) || (pattrib->ether_type == 0x888e) || (pattrib->dhcp_pkt == 1))
-#else /* !CONFIG_WAPI_SUPPORT */
 	if (pattrib->icmp_pkt == 1)
 		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_LEAVE, 1);
 	else if (pattrib->dhcp_pkt == 1)
-#endif
 	{
 		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_active);
 		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_SPECIAL_PACKET, 1);
@@ -1605,10 +1564,6 @@ static s32 xmitframe_swencrypt(_adapter *padapter, struct xmit_frame *pxmitframe
 		case _AES_:
 			rtw_aes_encrypt(padapter, (u8 *)pxmitframe);
 			break;
-#ifdef CONFIG_WAPI_SUPPORT
-		case _SMS4_:
-			rtw_sms4_encrypt(padapter, (u8 *)pxmitframe);
-#endif
 		default:
 			break;
 		}
@@ -2800,7 +2755,7 @@ void rtw_count_tx_stats(PADAPTER padapter, struct xmit_frame *pxmitframe, int sz
 	u8	pkt_num = 1;
 
 	if ((pxmitframe->frame_tag & 0x0f) == DATA_FRAMETAG) {
-#if defined(CONFIG_USB_TX_AGGREGATION) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
+#if defined(CONFIG_USB_TX_AGGREGATION)
 		pkt_num = pxmitframe->agg_num;
 #endif
 		pmlmepriv->LinkDetectInfo.NumTxOkInPeriod += pkt_num;
@@ -2841,21 +2796,6 @@ static struct xmit_buf *__rtw_alloc_cmd_xmitbuf(struct xmit_priv *pxmitpriv,
 	pxmitbuf = &pxmitpriv->pcmd_xmitbuf[buf_type];
 	if (pxmitbuf !=  NULL) {
 		pxmitbuf->priv_data = NULL;
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		pxmitbuf->len = 0;
-		pxmitbuf->pdata = pxmitbuf->ptail = pxmitbuf->phead;
-		pxmitbuf->agg_num = 0;
-		pxmitbuf->pg_num = 0;
-#endif
-#ifdef CONFIG_PCI_HCI
-		pxmitbuf->len = 0;
-#ifdef CONFIG_TRX_BD_ARCH
-		/*pxmitbuf->buf_desc = NULL;*/
-#else
-		pxmitbuf->desc = NULL;
-#endif
-#endif
 
 		if (pxmitbuf->sctx) {
 			RTW_INFO("%s pxmitbuf->sctx is not NULL\n", __func__);
@@ -2933,22 +2873,7 @@ struct xmit_buf *rtw_alloc_xmitbuf_ext(struct xmit_priv *pxmitpriv)
 		RTW_INFO("DBG_XMIT_BUF_EXT ALLOC no=%d,  free_xmit_extbuf_cnt=%d\n", pxmitbuf->no, pxmitpriv->free_xmit_extbuf_cnt);
 #endif
 
-
 		pxmitbuf->priv_data = NULL;
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		pxmitbuf->len = 0;
-		pxmitbuf->pdata = pxmitbuf->ptail = pxmitbuf->phead;
-		pxmitbuf->agg_num = 1;
-#endif
-#ifdef CONFIG_PCI_HCI
-		pxmitbuf->len = 0;
-#ifdef CONFIG_TRX_BD_ARCH
-		/*pxmitbuf->buf_desc = NULL;*/
-#else
-		pxmitbuf->desc = NULL;
-#endif
-#endif
 
 		if (pxmitbuf->sctx) {
 			RTW_INFO("%s pxmitbuf->sctx is not NULL\n", __func__);
@@ -3021,21 +2946,6 @@ struct xmit_buf *rtw_alloc_xmitbuf(struct xmit_priv *pxmitpriv)
 		/* RTW_INFO("alloc, free_xmitbuf_cnt=%d\n", pxmitpriv->free_xmitbuf_cnt); */
 
 		pxmitbuf->priv_data = NULL;
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		pxmitbuf->len = 0;
-		pxmitbuf->pdata = pxmitbuf->ptail = pxmitbuf->phead;
-		pxmitbuf->agg_num = 0;
-		pxmitbuf->pg_num = 0;
-#endif
-#ifdef CONFIG_PCI_HCI
-		pxmitbuf->len = 0;
-#ifdef CONFIG_TRX_BD_ARCH
-		/*pxmitbuf->buf_desc = NULL;*/
-#else
-		pxmitbuf->desc = NULL;
-#endif
-#endif
 
 		if (pxmitbuf->sctx) {
 			RTW_INFO("%s pxmitbuf->sctx is not NULL\n", __func__);
@@ -3115,11 +3025,6 @@ static void rtw_init_xmitframe(struct xmit_frame *pxframe)
 #endif
 
 #endif /* #ifdef CONFIG_USB_HCI */
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-		pxframe->pg_num = 1;
-		pxframe->agg_num = 1;
-#endif
 
 #ifdef CONFIG_XMIT_ACK
 		pxframe->ack_report = 0;
@@ -3468,10 +3373,8 @@ struct xmit_frame *rtw_dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmi
 	if (pregpriv->wifi_spec == 1) {
 		int j, tmp, acirp_cnt[4];
 
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_PCI_HCI)
 		for (j = 0; j < 4; j++)
 			inx[j] = pxmitpriv->wmm_para_seq[j];
-#endif
 	}
 
 	_enter_critical_bh(&pxmitpriv->lock, &irqL0);
@@ -4155,14 +4058,6 @@ s32 rtw_xmit(_adapter *padapter, _pkt **ppkt)
 	rtw_hal_mcc_calc_tx_bytes_from_kernel(padapter, pxmitframe->attrib.pktlen);
 #endif /* CONFIG_MCC_MODE */
 
-#ifdef CONFIG_WAPI_SUPPORT
-	if (pxmitframe->attrib.ether_type != 0x88B4) {
-		if (rtw_wapi_drop_for_key_absent(padapter, pxmitframe->attrib.ra)) {
-			WAPI_TRACE(WAPI_RX, "drop for key absend when tx\n");
-			res = _FAIL;
-		}
-	}
-#endif
 	if (res == _FAIL) {
 		/*RTW_INFO("%s-"ADPT_FMT" update attrib fail\n", __func__, ADPT_ARG(padapter));*/
 #ifdef DBG_TX_DROP_FRAME
@@ -4284,9 +4179,6 @@ inline bool xmitframe_hiq_filter(struct xmit_frame *xmitframe)
 
 			if (attrib->ether_type == 0x0806
 			    || attrib->ether_type == 0x888e
-#ifdef CONFIG_WAPI_SUPPORT
-			    || attrib->ether_type == 0x88B4
-#endif
 			    || attrib->dhcp_pkt
 			   ) {
 				if (0)
@@ -4858,9 +4750,6 @@ void enqueue_pending_xmitbuf(
 	rtw_list_insert_tail(&pxmitbuf->list, get_list_head(pqueue));
 	_exit_critical_bh(&pqueue->lock, &irql);
 
-#if defined(CONFIG_SDIO_HCI) && defined(CONFIG_CONCURRENT_MODE)
-	pri_adapter = GET_PRIMARY_ADAPTER(pri_adapter);
-#endif /*SDIO_HCI + CONCURRENT*/
 	_rtw_up_sema(&(pri_adapter->xmitpriv.xmit_sema));
 }
 

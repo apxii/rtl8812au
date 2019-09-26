@@ -1113,25 +1113,6 @@ void rtw_survey_event_callback(_adapter	*adapter, u8 *pbuf)
 	pnetwork = (WLAN_BSSID_EX *)pbuf;
 
 
-#ifdef CONFIG_RTL8712
-	/* endian_convert */
-	pnetwork->Length = le32_to_cpu(pnetwork->Length);
-	pnetwork->Ssid.SsidLength = le32_to_cpu(pnetwork->Ssid.SsidLength);
-	pnetwork->Privacy = le32_to_cpu(pnetwork->Privacy);
-	pnetwork->Rssi = le32_to_cpu(pnetwork->Rssi);
-	pnetwork->NetworkTypeInUse = le32_to_cpu(pnetwork->NetworkTypeInUse);
-	pnetwork->Configuration.ATIMWindow = le32_to_cpu(pnetwork->Configuration.ATIMWindow);
-	pnetwork->Configuration.BeaconPeriod = le32_to_cpu(pnetwork->Configuration.BeaconPeriod);
-	pnetwork->Configuration.DSConfig = le32_to_cpu(pnetwork->Configuration.DSConfig);
-	pnetwork->Configuration.FHConfig.DwellTime = le32_to_cpu(pnetwork->Configuration.FHConfig.DwellTime);
-	pnetwork->Configuration.FHConfig.HopPattern = le32_to_cpu(pnetwork->Configuration.FHConfig.HopPattern);
-	pnetwork->Configuration.FHConfig.HopSet = le32_to_cpu(pnetwork->Configuration.FHConfig.HopSet);
-	pnetwork->Configuration.FHConfig.Length = le32_to_cpu(pnetwork->Configuration.FHConfig.Length);
-	pnetwork->Configuration.Length = le32_to_cpu(pnetwork->Configuration.Length);
-	pnetwork->InfrastructureMode = le32_to_cpu(pnetwork->InfrastructureMode);
-	pnetwork->IELength = le32_to_cpu(pnetwork->IELength);
-#endif
-
 	len = get_WLAN_BSSID_EX_sz(pnetwork);
 	if (len > (sizeof(WLAN_BSSID_EX))) {
 		return;
@@ -1559,14 +1540,6 @@ void rtw_indicate_disconnect(_adapter *padapter, u16 reason, u8 locally_generate
 	if (rtw_to_roam(padapter) > 0)
 		_clr_fwstate_(pmlmepriv, _FW_LINKED);
 
-#ifdef CONFIG_WAPI_SUPPORT
-	psta = rtw_get_stainfo(pstapriv, cur_network->MacAddress);
-	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE))
-		rtw_wapi_return_one_sta_info(padapter, psta->hwaddr);
-	else if (check_fwstate(pmlmepriv, WIFI_ADHOC_STATE) ||
-		 check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE))
-		rtw_wapi_return_all_sta_info(padapter);
-#endif
 
 	if (check_fwstate(&padapter->mlmepriv, _FW_LINKED)
 	    || (rtw_to_roam(padapter) <= 0)
@@ -2252,11 +2225,6 @@ void rtw_stassoc_event_callback(_adapter *adapter, u8 *pbuf)
 
 
 	mlmeext_sta_add_event_callback(adapter, psta);
-
-#ifdef CONFIG_RTL8711
-	/* submit SetStaKey_cmd to tell fw, fw will allocate an CAM entry for this sta	 */
-	rtw_setstakey_cmd(adapter, psta, GROUP_KEY, _TRUE);
-#endif
 
 exit:
 	return;
@@ -3733,7 +3701,7 @@ void rtw_joinbss_reset(_adapter *padapter)
 
 	phtpriv->ampdu_enable = _FALSE;/* reset to disabled */
 
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI)
+#if defined(CONFIG_USB_HCI)
 	/* TH=1 => means that invalidate usb rx aggregation */
 	/* TH=0 => means that validate usb rx aggregation, use init value. */
 	if (phtpriv->ht_option) {
@@ -3746,7 +3714,7 @@ void rtw_joinbss_reset(_adapter *padapter)
 		threshold = 1;
 		rtw_hal_set_hwreg(padapter, HW_VAR_RXDMA_AGG_PG_TH, (u8 *)(&threshold));
 	}
-#endif/* #if defined( CONFIG_USB_HCI) || defined (CONFIG_SDIO_HCI) */
+#endif/* #if defined( CONFIG_USB_HCI) */
 
 #endif/* #ifdef CONFIG_80211N_HT */
 
@@ -3973,14 +3941,6 @@ unsigned int rtw_restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, ui
 	/*
 	AMPDU_para [1:0]:Max AMPDU Len => 0:8k , 1:16k, 2:32k, 3:64k
 	AMPDU_para [4:2]:Min MPDU Start Spacing
-	*/
-
-	/*
-	#if defined(CONFIG_RTL8188E) && defined(CONFIG_SDIO_HCI)
-	ht_capie.ampdu_params_info = 2;
-	#else
-	ht_capie.ampdu_params_info = (IEEE80211_HT_CAP_AMPDU_FACTOR&0x03);
-	#endif
 	*/
 
 	if (padapter->driver_rx_ampdu_factor != 0xFF)
@@ -4339,10 +4299,6 @@ void _rtw_roaming(_adapter *padapter, struct wlan_network *tgt_network)
 		_rtw_memcpy(&pmlmepriv->assoc_ssid, &cur_network->network.Ssid, sizeof(NDIS_802_11_SSID));
 
 		pmlmepriv->assoc_by_bssid = _FALSE;
-
-#ifdef CONFIG_WAPI_SUPPORT
-		rtw_wapi_return_all_sta_info(padapter);
-#endif
 
 		while (1) {
 			do_join_r = rtw_do_join(padapter);

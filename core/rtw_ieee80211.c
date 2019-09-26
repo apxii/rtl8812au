@@ -745,51 +745,6 @@ int rtw_parse_wpa2_ie(u8 *rsn_ie, int rsn_ie_len, int *group_cipher, int *pairwi
 
 }
 
-/* #ifdef CONFIG_WAPI_SUPPORT */
-int rtw_get_wapi_ie(u8 *in_ie, uint in_len, u8 *wapi_ie, u16 *wapi_len)
-{
-	int len = 0;
-	u8 authmode, i;
-	uint	cnt;
-	u8 wapi_oui1[4] = {0x0, 0x14, 0x72, 0x01};
-	u8 wapi_oui2[4] = {0x0, 0x14, 0x72, 0x02};
-
-
-	if (wapi_len)
-		*wapi_len = 0;
-
-	if (!in_ie || in_len <= 0)
-		return len;
-
-	cnt = (_TIMESTAMP_ + _BEACON_ITERVAL_ + _CAPABILITY_);
-
-	while (cnt < in_len) {
-		authmode = in_ie[cnt];
-
-		/* if(authmode==_WAPI_IE_) */
-		if (authmode == _WAPI_IE_ && (_rtw_memcmp(&in_ie[cnt + 6], wapi_oui1, 4) == _TRUE ||
-			_rtw_memcmp(&in_ie[cnt + 6], wapi_oui2, 4) == _TRUE)) {
-			if (wapi_ie)
-				_rtw_memcpy(wapi_ie, &in_ie[cnt], in_ie[cnt + 1] + 2);
-
-			if (wapi_len)
-				*wapi_len = in_ie[cnt + 1] + 2;
-
-			cnt += in_ie[cnt + 1] + 2; /* get next */
-		} else {
-			cnt += in_ie[cnt + 1] + 2; /* get next */
-		}
-	}
-
-	if (wapi_len)
-		len = *wapi_len;
-
-
-	return len;
-
-}
-/* #endif */
-
 int rtw_get_sec_ie(u8 *in_ie, uint in_len, u8 *rsn_ie, u16 *rsn_len, u8 *wpa_ie, u16 *wpa_len)
 {
 	u8 authmode, sec_idx, i;

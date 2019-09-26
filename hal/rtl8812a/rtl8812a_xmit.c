@@ -337,7 +337,7 @@ void rtl8812a_fill_fake_txdesc(
 	}
 	SET_TX_DESC_TX_RATE_8812(pDesc, MRateToHwRate(pmlmeext->tx_rate));
 
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI)
+#if defined(CONFIG_USB_HCI)
 	/* USB interface drop packet if the checksum of descriptor isn't correct. */
 	/* Using this checksum can let hardware recovery from packet bulk out error (e.g. Cancel URC, Bulk out error.). */
 	rtl8812a_cal_txdesc_chksum(pDesc);
@@ -367,11 +367,6 @@ void rtl8812a_fill_txdesc_sectype(struct pkt_attrib *pattrib, u8 *ptxdesc)
 		case _TKIP_WTMIC_:
 			SET_TX_DESC_SEC_TYPE_8812(ptxdesc, 0x1);
 			break;
-#ifdef CONFIG_WAPI_SUPPORT
-		case _SMS4_:
-			SET_TX_DESC_SEC_TYPE_8812(ptxdesc, 0x2);
-			break;
-#endif
 		case _AES_:
 			SET_TX_DESC_SEC_TYPE_8812(ptxdesc, 0x3);
 			break;

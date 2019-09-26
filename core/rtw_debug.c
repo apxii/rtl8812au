@@ -157,18 +157,6 @@ void dump_drv_cfg(void *sel)
 #endif
 #endif /*CONFIG_USB_HCI*/
 
-#ifdef CONFIG_SDIO_HCI
-#ifdef CONFIG_TX_AGGREGATION
-	RTW_PRINT_SEL(sel, "CONFIG_TX_AGGREGATION\n");
-#endif
-#ifdef CONFIG_RX_AGGREGATION
-	RTW_PRINT_SEL(sel, "CONFIG_RX_AGGREGATION\n");
-#endif
-#endif /*CONFIG_SDIO_HCI*/
-
-#ifdef CONFIG_PCI_HCI
-#endif
-
 	RTW_PRINT_SEL(sel, "MAX_XMITBUF_SZ = %d\n", MAX_XMITBUF_SZ);
 	RTW_PRINT_SEL(sel, "MAX_RECVBUF_SZ = %d\n", MAX_RECVBUF_SZ);
 
@@ -190,38 +178,6 @@ void dump_log_level(void *sel)
 #endif
 }
 
-#ifdef CONFIG_SDIO_HCI
-void sd_f0_reg_dump(void *sel, _adapter *adapter)
-{
-	int i;
-
-	for (i = 0x0; i <= 0xff; i++) {
-		if (i % 16 == 0)
-			RTW_PRINT_SEL(sel, "0x%02x ", i);
-
-		_RTW_PRINT_SEL(sel, "%02x ", rtw_sd_f0_read8(adapter, i));
-
-		if (i % 16 == 15)
-			_RTW_PRINT_SEL(sel, "\n");
-		else if (i % 8 == 7)
-			_RTW_PRINT_SEL(sel, "\t");
-	}
-}
-
-void sdio_local_reg_dump(void *sel, _adapter *adapter)
-{
-	int i, j = 1;
-
-	for (i = 0x0; i < 0x100; i += 4) {
-		if (j % 4 == 1)
-			RTW_PRINT_SEL(sel, "0x%02x", i);
-		_RTW_PRINT_SEL(sel, " 0x%08x ", rtw_read32(adapter, (0x1025 << 16) | i));
-		if ((j++) % 4 == 0)
-			_RTW_PRINT_SEL(sel, "\n");
-	}
-}
-#endif /* CONFIG_SDIO_HCI */
-
 void mac_reg_dump(void *sel, _adapter *adapter)
 {
 	int i, j = 1;
@@ -235,28 +191,6 @@ void mac_reg_dump(void *sel, _adapter *adapter)
 		if ((j++) % 4 == 0)
 			_RTW_PRINT_SEL(sel, "\n");
 	}
-
-#ifdef CONFIG_RTL8814A
-	{
-		for (i = 0x1000; i < 0x1650; i += 4) {
-			if (j % 4 == 1)
-				RTW_PRINT_SEL(sel, "0x%04x", i);
-			_RTW_PRINT_SEL(sel, " 0x%08x ", rtw_read32(adapter, i));
-			if ((j++) % 4 == 0)
-				_RTW_PRINT_SEL(sel, "\n");
-		}
-	}
-#endif /* CONFIG_RTL8814A */
-
-#if defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)
-	for (i = 0x1000; i < 0x1800; i += 4) {
-		if (j % 4 == 1)
-			RTW_PRINT_SEL(sel, "0x%04x", i);
-		_RTW_PRINT_SEL(sel, " 0x%08x ", rtw_read32(adapter, i));
-		if ((j++) % 4 == 0)
-			_RTW_PRINT_SEL(sel, "\n");
-	}
-#endif /* CONFIG_RTL8822B */
 }
 
 void bb_reg_dump(void *sel, _adapter *adapter)
@@ -271,16 +205,6 @@ void bb_reg_dump(void *sel, _adapter *adapter)
 		if ((j++) % 4 == 0)
 			_RTW_PRINT_SEL(sel, "\n");
 	}
-
-#if defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)
-	for (i = 0x1800; i < 0x2000; i += 4) {
-		if (j % 4 == 1)
-			RTW_PRINT_SEL(sel, "0x%04x", i);
-		_RTW_PRINT_SEL(sel, " 0x%08x ", rtw_read32(adapter, i));
-		if ((j++) % 4 == 0)
-			_RTW_PRINT_SEL(sel, "\n");
-	}
-#endif /* CONFIG_RTL8822B */
 }
 
 void bb_reg_dump_ex(void *sel, _adapter *adapter)
@@ -293,14 +217,6 @@ void bb_reg_dump_ex(void *sel, _adapter *adapter)
 		_RTW_PRINT_SEL(sel, " 0x%08x ", rtw_read32(adapter, i));
 		_RTW_PRINT_SEL(sel, "\n");
 	}
-
-#if defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)
-	for (i = 0x1800; i < 0x2000; i += 4) {
-		RTW_PRINT_SEL(sel, "0x%04x", i);
-		_RTW_PRINT_SEL(sel, " 0x%08x ", rtw_read32(adapter, i));
-		_RTW_PRINT_SEL(sel, "\n");
-	}
-#endif /* CONFIG_RTL8822B */
 }
 
 void rf_reg_dump(void *sel, _adapter *adapter)
@@ -1919,12 +1835,6 @@ int proc_get_suspend_resume_info(struct seq_file *m, void *v)
 	struct dvobj_priv *dvobj = padapter->dvobj;
 	struct debug_priv *pdbgpriv = &dvobj->drv_dbg;
 
-	RTW_PRINT_SEL(m, "dbg_sdio_alloc_irq_cnt=%d\n", pdbgpriv->dbg_sdio_alloc_irq_cnt);
-	RTW_PRINT_SEL(m, "dbg_sdio_free_irq_cnt=%d\n", pdbgpriv->dbg_sdio_free_irq_cnt);
-	RTW_PRINT_SEL(m, "dbg_sdio_alloc_irq_error_cnt=%d\n", pdbgpriv->dbg_sdio_alloc_irq_error_cnt);
-	RTW_PRINT_SEL(m, "dbg_sdio_free_irq_error_cnt=%d\n", pdbgpriv->dbg_sdio_free_irq_error_cnt);
-	RTW_PRINT_SEL(m, "dbg_sdio_init_error_cnt=%d\n", pdbgpriv->dbg_sdio_init_error_cnt);
-	RTW_PRINT_SEL(m, "dbg_sdio_deinit_error_cnt=%d\n", pdbgpriv->dbg_sdio_deinit_error_cnt);
 	RTW_PRINT_SEL(m, "dbg_suspend_error_cnt=%d\n", pdbgpriv->dbg_suspend_error_cnt);
 	RTW_PRINT_SEL(m, "dbg_suspend_cnt=%d\n", pdbgpriv->dbg_suspend_cnt);
 	RTW_PRINT_SEL(m, "dbg_resume_cnt=%d\n", pdbgpriv->dbg_resume_cnt);
@@ -1973,8 +1883,6 @@ int proc_get_rx_logs(struct seq_file *m, void *v)
 		      "core_rx_pre_ctrl=%d\n"
 		      "core_rx_pre_ctrl_err=%d\n"
 		      "core_rx_pre_data=%d\n"
-		      "core_rx_pre_data_wapi_seq_err=%d\n"
-		      "core_rx_pre_data_wapi_key_err=%d\n"
 		      "core_rx_pre_data_handled=%d\n"
 		      "core_rx_pre_data_err=%d\n"
 		      "core_rx_pre_data_unknown=%d\n"
@@ -1986,7 +1894,6 @@ int proc_get_rx_logs(struct seq_file *m, void *v)
 		      "core_rx_post_decrypt_wep=%d\n"
 		      "core_rx_post_decrypt_tkip=%d\n"
 		      "core_rx_post_decrypt_aes=%d\n"
-		      "core_rx_post_decrypt_wapi=%d\n"
 		      "core_rx_post_decrypt_hw=%d\n"
 		      "core_rx_post_decrypt_unknown=%d\n"
 		      "core_rx_post_decrypt_err=%d\n"
@@ -2016,8 +1923,6 @@ int proc_get_rx_logs(struct seq_file *m, void *v)
 		      rx_logs->core_rx_pre_ctrl,
 		      rx_logs->core_rx_pre_ctrl_err,
 		      rx_logs->core_rx_pre_data,
-		      rx_logs->core_rx_pre_data_wapi_seq_err,
-		      rx_logs->core_rx_pre_data_wapi_key_err,
 		      rx_logs->core_rx_pre_data_handled,
 		      rx_logs->core_rx_pre_data_err,
 		      rx_logs->core_rx_pre_data_unknown,
@@ -2029,7 +1934,6 @@ int proc_get_rx_logs(struct seq_file *m, void *v)
 		      rx_logs->core_rx_post_decrypt_wep,
 		      rx_logs->core_rx_post_decrypt_tkip,
 		      rx_logs->core_rx_post_decrypt_aes,
-		      rx_logs->core_rx_post_decrypt_wapi,
 		      rx_logs->core_rx_post_decrypt_hw,
 		      rx_logs->core_rx_post_decrypt_unknown,
 		      rx_logs->core_rx_post_decrypt_err,
@@ -2505,24 +2409,6 @@ int proc_get_mac_rptbuf(struct seq_file *m, void *v)
 	u16 mac_id;
 	u32 shcut_addr = 0;
 	u32 read_addr = 0;
-#ifdef CONFIG_RTL8814A
-	RTW_PRINT_SEL(m, "TX ShortCut:\n");
-	for (mac_id = 0; mac_id < 64; mac_id++) {
-		rtw_write16(padapter, 0x140, 0x662 | ((mac_id & BIT5) >> 5));
-		shcut_addr = 0x8000;
-		shcut_addr = shcut_addr | ((mac_id & 0x1f) << 7);
-		RTW_PRINT_SEL(m, "mac_id=%d, 0x140=%x =>\n", mac_id, 0x662 | ((mac_id & BIT5) >> 5));
-		for (i = 0; i < 30; i++) {
-			read_addr = 0;
-			read_addr = shcut_addr | (i << 2);
-			RTW_PRINT_SEL(m, "i=%02d: MAC_%04x= %08x ", i, read_addr, rtw_read32(padapter, read_addr));
-			if (!((i + 1) % 4))
-				RTW_PRINT_SEL(m, "\n");
-			if (i == 29)
-				RTW_PRINT_SEL(m, "\n");
-		}
-	}
-#endif /* CONFIG_RTL8814A */
 	return 0;
 }
 
@@ -3569,94 +3455,6 @@ ssize_t proc_set_sreset(struct file *file, const char __user *buffer, size_t cou
 
 }
 #endif /* DBG_CONFIG_ERROR_DETECT */
-
-#ifdef CONFIG_PCI_HCI
-
-int proc_get_rx_ring(struct seq_file *m, void *v)
-{
-	_irqL irqL;
-	struct net_device *dev = m->private;
-	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
-	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
-	struct recv_priv *precvpriv = &padapter->recvpriv;
-	struct rtw_rx_ring *rx_ring = &precvpriv->rx_ring[RX_MPDU_QUEUE];
-	int i, j;
-
-	RTW_PRINT_SEL(m, "rx ring (%p)\n", rx_ring);
-	RTW_PRINT_SEL(m, "  dma: 0x%08x\n", (int) rx_ring->dma);
-	RTW_PRINT_SEL(m, "  idx: %d\n", rx_ring->idx);
-
-	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
-	for (i = 0; i < precvpriv->rxringcount; i++) {
-#ifdef CONFIG_TRX_BD_ARCH
-		struct rx_buf_desc *entry = &rx_ring->buf_desc[i];
-#else
-		struct recv_stat *entry = &rx_ring->desc[i];
-#endif
-		struct sk_buff *skb = rx_ring->rx_buf[i];
-
-		RTW_PRINT_SEL(m, "  desc[%03d]: %p, rx_buf[%03d]: 0x%08x\n",
-			i, entry, i, cpu_to_le32(*((dma_addr_t *)skb->cb)));
-
-		for (j = 0; j < sizeof(*entry) / 4; j++) {
-			if ((j % 4) == 0)
-				RTW_PRINT_SEL(m, "  0x%03x", j);
-
-			RTW_PRINT_SEL(m, " 0x%08x ", ((int *) entry)[j]);
-
-			if ((j % 4) == 3)
-				RTW_PRINT_SEL(m, "\n");
-		}
-	}
-	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
-
-	return 0;
-}
-
-int proc_get_tx_ring(struct seq_file *m, void *v)
-{
-	_irqL irqL;
-	struct net_device *dev = m->private;
-	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
-	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
-	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-	int i, j, k;
-
-	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
-	for (i = 0; i < PCI_MAX_TX_QUEUE_COUNT; i++) {
-		struct rtw_tx_ring *tx_ring = &pxmitpriv->tx_ring[i];
-
-		RTW_PRINT_SEL(m, "tx ring[%d] (%p)\n", i, tx_ring);
-		RTW_PRINT_SEL(m, "  dma: 0x%08x\n", (int) tx_ring->dma);
-		RTW_PRINT_SEL(m, "  idx: %d\n", tx_ring->idx);
-		RTW_PRINT_SEL(m, "  entries: %d\n", tx_ring->entries);
-		/*		RTW_PRINT_SEL(m, "  queue: %d\n", tx_ring->queue); */
-		RTW_PRINT_SEL(m, "  qlen: %d\n", tx_ring->qlen);
-
-		for (j = 0; j < pxmitpriv->txringcount[i]; j++) {
-#ifdef CONFIG_TRX_BD_ARCH
-			struct tx_buf_desc *entry = &tx_ring->buf_desc[j];
-#else
-			struct tx_desc *entry = &tx_ring->desc[j];
-#endif
-
-			RTW_PRINT_SEL(m, "  desc[%03d]: %p\n", j, entry);
-			for (k = 0; k < sizeof(*entry) / 4; k++) {
-				if ((k % 4) == 0)
-					RTW_PRINT_SEL(m, "  0x%03x", k);
-
-				RTW_PRINT_SEL(m, " 0x%08x ", ((int *) entry)[k]);
-
-				if ((k % 4) == 3)
-					RTW_PRINT_SEL(m, "\n");
-			}
-		}
-	}
-	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
-
-	return 0;
-}
-#endif
 
 #ifdef CONFIG_WOWLAN
 int proc_get_pattern_info(struct seq_file *m, void *v)
@@ -5187,13 +4985,7 @@ int proc_get_ack_timeout(struct seq_file *m, void *v)
 
 	ack_timeout_val = rtw_read8(padapter, REG_ACKTO);
 
-#ifdef CONFIG_RTL8821C
-	ack_timeout_val_cck = rtw_read8(padapter, REG_ACKTO_CCK_8821C);
-	RTW_PRINT_SEL(m, "Current CCK packet ACK Timeout = %d us (0x%x).\n", ack_timeout_val_cck, ack_timeout_val_cck);
-	RTW_PRINT_SEL(m, "Current non-CCK packet ACK Timeout = %d us (0x%x).\n", ack_timeout_val, ack_timeout_val);
-#else
 	RTW_PRINT_SEL(m, "Current ACK Timeout = %d us (0x%x).\n", ack_timeout_val, ack_timeout_val);
-#endif
 
 	return 0;
 }
@@ -5213,28 +5005,14 @@ ssize_t proc_set_ack_timeout(struct file *file, const char __user *buffer, size_
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		int num = sscanf(tmp, "%u %u", &ack_timeout_ms, &ack_timeout_ms_cck);
 
-#ifdef CONFIG_RTL8821C
-		if (num < 2) {
-			RTW_INFO(FUNC_ADPT_FMT ": input parameters < 2\n", FUNC_ADPT_ARG(padapter));
-			return -EINVAL;
-		}
-#else
 		if (num < 1) {
 			RTW_INFO(FUNC_ADPT_FMT ": input parameters < 1\n", FUNC_ADPT_ARG(padapter));
 			return -EINVAL;
 		}
-#endif
 		/* This register sets the Ack time out value after Tx unicast packet. It is in units of us. */
 		rtw_write8(padapter, REG_ACKTO, (u8)ack_timeout_ms);
 
-#ifdef CONFIG_RTL8821C
-		/* This register sets the Ack time out value after Tx unicast CCK packet. It is in units of us. */
-		rtw_write8(padapter, REG_ACKTO_CCK_8821C, (u8)ack_timeout_ms_cck);
-		RTW_INFO("Set CCK packet ACK Timeout to %d us.\n", ack_timeout_ms_cck);
-		RTW_INFO("Set non-CCK packet ACK Timeout to %d us.\n", ack_timeout_ms);
-#else
 		RTW_INFO("Set ACK Timeout to %d us.\n", ack_timeout_ms);
-#endif
 	}
 
 	return count;

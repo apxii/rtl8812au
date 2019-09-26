@@ -207,9 +207,6 @@ send_fw_ht_ndpa_packet(
 	PlatformAcquireSpinLock(adapter, RT_TX_SPINLOCK);
 
 	if (MgntGetFWBuffer(p_def_adapter, &p_tcb, &p_buf)) {
-#if (DEV_BUS_TYPE != RT_PCI_INTERFACE)
-		desc_len = adapter->HWDescHeadLength - p_hal_data->USBALLDummyLength;
-#endif
 		buf_addr = p_buf->Buffer.VirtualAddress + desc_len;
 
 		construct_ht_ndpa_packet(
@@ -378,9 +375,6 @@ send_fw_vht_ndpa_packet(
 	PlatformAcquireSpinLock(adapter, RT_TX_SPINLOCK);
 
 	if (MgntGetFWBuffer(p_def_adapter, &p_tcb, &p_buf)) {
-#if (DEV_BUS_TYPE != RT_PCI_INTERFACE)
-		desc_len = adapter->HWDescHeadLength - p_hal_data->USBALLDummyLength;
-#endif
 		buf_addr = p_buf->Buffer.VirtualAddress + desc_len;
 
 		construct_vht_ndpa_packet(

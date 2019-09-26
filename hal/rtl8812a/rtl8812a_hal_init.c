@@ -212,10 +212,6 @@ _BlockWrite_8812(
 	u32			remainSize_p1 = 0, remainSize_p2 = 0;
 	u8			*bufferPtr	= (u8 *)buffer;
 	u32			i = 0, offset = 0;
-#ifdef CONFIG_PCI_HCI
-	u8			remainFW[4] = {0, 0, 0, 0};
-	u8			*p = NULL;
-#endif
 
 #ifdef CONFIG_USB_HCI
 	blockSize_p1 = MAX_REG_BOLCK_SIZE;
@@ -237,25 +233,6 @@ _BlockWrite_8812(
 		if (ret == _FAIL)
 			goto exit;
 	}
-
-#ifdef CONFIG_PCI_HCI
-	p = (u8 *)((u32 *)(bufferPtr + blockCount_p1 * blockSize_p1));
-	if (remainSize_p1) {
-		switch (remainSize_p1) {
-		case 0:
-			break;
-		case 3:
-			remainFW[2] = *(p + 2);
-		case 2:
-			remainFW[1] = *(p + 1);
-		case 1:
-			remainFW[0] = *(p);
-			ret = rtw_write32(padapter, (FW_START_ADDRESS + blockCount_p1 * blockSize_p1),
-					  le32_to_cpu(*(u32 *)remainFW));
-		}
-		return ret;
-	}
-#endif
 
 	/* 3 Phase #2 */
 	if (remainSize_p1) {
@@ -343,12 +320,6 @@ _WriteFW_8812(
 	u32	pageNums, remainSize ;
 	u32	page, offset;
 	u8	*bufferPtr = (u8 *)buffer;
-
-#ifdef CONFIG_PCI_HCI
-	/* 20100120 Joseph: Add for 88CE normal chip. */
-	/* Fill in zero to make firmware image to dword alignment.
-	*		_FillDummy(bufferPtr, &size); */
-#endif
 
 	pageNums = size / MAX_DLFW_PAGE_SIZE ;
 	/* RT_ASSERT((pageNums <= 4), ("Page numbers should not greater then 4\n")); */
@@ -721,10 +692,6 @@ int _CheckWLANFwPatchBTFwReady_8821A(PADAPTER	Adapter)
 	u1Byte	u1bTmp;
 	int ret = _FAIL;
 
-#if (DEV_BUS_TYPE == RT_SDIO_INTERFACE)
-	u4Byte	txpktbuf_bndy;
-#endif
-
 	/* --------------------------------------------------------- */
 	/* Check if BT FW patch procedure is ready. */
 	/* --------------------------------------------------------- */
@@ -747,18 +714,6 @@ int _CheckWLANFwPatchBTFwReady_8821A(PADAPTER	Adapter)
 	/* --------------------------------------------------------- */
 	/* Reset beacon setting to the initial value. */
 	/* --------------------------------------------------------- */
-#if (DEV_BUS_TYPE == RT_SDIO_INTERFACE)
-	{/* for WMM */
-		txpktbuf_bndy = WMM_NORMAL_TX_PAGE_BOUNDARY_8821;
-	}
-
-	ret =	InitLLTTable8812A(Adapter, txpktbuf_bndy);
-	if (_SUCCESS != ret)
-		RTW_INFO("_CheckWLANFwPatchBTFwReady_8821A(): Failed to init LLT!\n");
-
-	/* Init Tx boundary. */
-	PlatformEFIOWrite1Byte(Adapter, REG_TDECTRL + 1, (u1Byte)txpktbuf_bndy);
-#endif
 
 	SetBcnCtrlReg(Adapter, BIT3, 0);
 	SetBcnCtrlReg(Adapter, 0, BIT4);
@@ -873,11 +828,7 @@ int _WriteBTFWtoTxPktBuf8812(
 		_rtw_memcpy((u8 *)(pmgntframe->buf_addr + txdesc_offset), ReservedPagePacket, FwBufLen);
 		RTW_INFO("[%d]===>TotalPktLen + TXDESC_OFFSET TotalPacketLen:%d\n", DLBcnCount, (FwBufLen + txdesc_offset));
 
-#ifdef CONFIG_PCI_HCI
-		dump_mgntframe(Adapter, pmgntframe);
-#else
 		dump_mgntframe_and_wait(Adapter, pmgntframe, 100);
-#endif
 
 		/* check rsvd page download OK. */
 		BcnValidReg = PlatformEFIORead1Byte(Adapter, REG_TDECTRL + 2);
@@ -3910,11 +3861,6 @@ SetBeamformingCLK_8812(
 	/* Stop Usb TxDMA */
 	rtw_write_port_cancel(Adapter);
 
-#ifdef CONFIG_PCI_HCI
-	/* Stop PCIe TxDMA */
-	rtw_write8(Adapter, REG_PCIE_CTRL_REG + 1, 0xFE);
-#endif
-
 	/* Wait TXFF empty */
 	for (Count = 0; Count < 100; Count++) {
 		u2btmp = rtw_read16(Adapter, REG_TXPKT_EMPTY);
@@ -4428,9 +4374,6 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 		if ((mode == _HW_STATE_STATION_) || (mode == _HW_STATE_NOLINK_)) {
 			if (!rtw_mi_check_status(Adapter, MI_AP_MODE)) {
 				StopTxBeacon(Adapter);
-#ifdef CONFIG_PCI_HCI
-				UpdateInterruptMask8812AE(Adapter, 0, 0, RT_BCN_INT_MASKS, 0);
-#else
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN
 
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN_EARLY_INT
@@ -4443,7 +4386,6 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 #endif/* CONFIG_INTERRUPT_BASED_TXBCN_BCN_OK_ERR */
 
 #endif /* CONFIG_INTERRUPT_BASED_TXBCN */
-#endif
 			}
 
 			rtw_write8(Adapter, REG_BCN_CTRL_1, 0x11); /* disable atim wnd and disable beacon function */
@@ -4452,9 +4394,6 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 			ResumeTxBeacon(Adapter);
 			rtw_write8(Adapter, REG_BCN_CTRL_1, 0x1a);
 		} else if (mode == _HW_STATE_AP_) {
-#ifdef CONFIG_PCI_HCI
-			UpdateInterruptMask8812AE(Adapter, RT_BCN_INT_MASKS, 0, 0, 0);
-#else
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN_EARLY_INT
 			UpdateInterruptMask8812AU(Adapter, _TRUE , IMR_BCNDMAINT0_8812, 0);
@@ -4465,17 +4404,11 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 #endif/* CONFIG_INTERRUPT_BASED_TXBCN_BCN_OK_ERR */
 
 #endif /* CONFIG_INTERRUPT_BASED_TXBCN */
-#endif
 
 			ResumeTxBeacon(Adapter);
 
 			rtw_write8(Adapter, REG_BCN_CTRL_1, 0x12);
 
-#ifdef CONFIG_PCI_HCI
-			/*Beacon is polled to TXBUF SWBCN*/
-			rtw_write32(Adapter, REG_CR, rtw_read32(Adapter, REG_CR) | BIT(8));
-			RTW_INFO("CR:SWBCN %x\n", rtw_read32(Adapter, 0x100));
-#endif
 			/* Set RCR */
 			/* rtw_write32(padapter, REG_RCR, 0x70002a8e); */ /* CBSSID_DATA must set to 0 */
 			/* rtw_write32(Adapter, REG_RCR, 0x7000228e); */ /* CBSSID_DATA must set to 0 */
@@ -4554,9 +4487,6 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 #endif /* CONFIG_CONCURRENT_MODE */
 			{
 				StopTxBeacon(Adapter);
-#ifdef CONFIG_PCI_HCI
-				UpdateInterruptMask8812AE(Adapter, 0, 0, RT_BCN_INT_MASKS, 0);
-#else
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN_EARLY_INT
 				rtw_write8(Adapter, REG_DRVERLYINT, 0x05);/* restore early int time to 5ms					 */
@@ -4568,7 +4498,6 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 #endif /* CONFIG_INTERRUPT_BASED_TXBCN_BCN_OK_ERR */
 
 #endif /* CONFIG_INTERRUPT_BASED_TXBCN */
-#endif
 			}
 
 			rtw_write8(Adapter, REG_BCN_CTRL, 0x19); /* disable atim wnd */
@@ -4577,9 +4506,6 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 			ResumeTxBeacon(Adapter);
 			rtw_write8(Adapter, REG_BCN_CTRL, 0x1a);
 		} else if (mode == _HW_STATE_AP_) {
-#ifdef CONFIG_PCI_HCI
-			UpdateInterruptMask8812AE(Adapter, RT_BCN_INT_MASKS, 0, 0, 0);
-#else
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN_EARLY_INT
 			UpdateInterruptMask8812AU(Adapter, _TRUE , IMR_BCNDMAINT0_8812, 0);
@@ -4590,17 +4516,10 @@ static void hw_var_set_opmode(PADAPTER Adapter, u8 variable, u8 *val)
 #endif/* CONFIG_INTERRUPT_BASED_TXBCN_BCN_OK_ERR */
 
 #endif /* CONFIG_INTERRUPT_BASED_TXBCN */
-#endif
 
 			ResumeTxBeacon(Adapter);
 
 			rtw_write8(Adapter, REG_BCN_CTRL, 0x12);
-#ifdef CONFIG_PCI_HCI
-			/*Beacon is polled to TXBUF SWBCN*/
-			rtw_write32(Adapter, REG_CR, rtw_read32(Adapter, REG_CR) | BIT(8));
-			RTW_INFO("CR:SWBCN %x\n", rtw_read32(Adapter, 0x100));
-#endif
-
 			/* Set RCR */
 			/* rtw_write32(padapter, REG_RCR, 0x70002a8e); */ /* CBSSID_DATA must set to 0 */
 			/* rtw_write32(Adapter, REG_RCR, 0x7000228e); */ /* CBSSID_DATA must set to 0 */

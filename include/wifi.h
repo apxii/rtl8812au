@@ -1259,10 +1259,6 @@ struct rtw_regulatory {
 };
 #endif
 
-#ifdef CONFIG_WAPI_SUPPORT
-#ifndef IW_AUTH_WAPI_VERSION_1
-#define IW_AUTH_WAPI_VERSION_1		0x00000008
-#endif
 #ifndef IW_AUTH_KEY_MGMT_WAPI_PSK
 #define IW_AUTH_KEY_MGMT_WAPI_PSK	0x04
 #endif

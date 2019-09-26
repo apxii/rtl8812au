@@ -120,9 +120,6 @@
 
 		/* #define DBG_RUNTIME_PORT_SWITCH */
 		#define CONFIG_SCAN_BACKOP
-		/* #ifdef CONFIG_RTL8812A */
-		/* #define CONFIG_TSF_RESET_OFFLOAD 1 */		/* For 2 PORT TSF SYNC. */
-		/* #endif */
 	#endif
 
 /* #else */	/* #ifndef CONFIG_MP_INCLUDED */

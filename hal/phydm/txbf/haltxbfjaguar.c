@@ -437,11 +437,6 @@ hal_txbf_jaguar_clk_8812a(
 		ODM_RT_TRACE(p_dm_odm, PHYDM_COMP_TXBF, ODM_DBG_LOUD, ("[%s] return by Scan\n", __func__));
 		return;
 	}
-#if DEV_BUS_TYPE == RT_PCI_INTERFACE
-	/*Stop PCIe TxDMA*/
-	odm_write_1byte(p_dm_odm, REG_PCIE_CTRL_REG_8812A + 1, 0xFE);
-#endif
-
 	/*Stop Usb TxDMA*/
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 	RT_DISABLE_FUNC(adapter, DF_TX_BIT);
@@ -501,10 +496,6 @@ hal_txbf_jaguar_clk_8812a(
 	/*Enable RX DMA path*/
 	u1btmp = odm_read_1byte(p_dm_odm, REG_RXDMA_CONTROL_8812A);
 	odm_write_1byte(p_dm_odm, REG_RXDMA_CONTROL_8812A, u1btmp & (~BIT(2)));
-#if DEV_BUS_TYPE == RT_PCI_INTERFACE
-	/*Enable PCIe TxDMA*/
-	odm_write_1byte(p_dm_odm, REG_PCIE_CTRL_REG_8812A + 1, 0);
-#endif
 	/*Start Usb TxDMA*/
 	RT_ENABLE_FUNC(adapter, DF_TX_BIT);
 }

@@ -45,26 +45,6 @@ odm_read_and_config_mp_8821a_txpowertrack_ap(/* TC: Test Chip, MP: MP Chip*/
 u32 odm_get_version_mp_8821a_txpowertrack_ap(void);
 
 /******************************************************************************
-*                           TxPowerTrack_PCIE.TXT
-******************************************************************************/
-
-void
-odm_read_and_config_mp_8821a_txpowertrack_pcie(/* TC: Test Chip, MP: MP Chip*/
-	struct PHY_DM_STRUCT  *p_dm_odm
-);
-u32 odm_get_version_mp_8821a_txpowertrack_pcie(void);
-
-/******************************************************************************
-*                           TxPowerTrack_SDIO.TXT
-******************************************************************************/
-
-void
-odm_read_and_config_mp_8821a_txpowertrack_sdio(/* TC: Test Chip, MP: MP Chip*/
-	struct PHY_DM_STRUCT  *p_dm_odm
-);
-u32 odm_get_version_mp_8821a_txpowertrack_sdio(void);
-
-/******************************************************************************
 *                           TxPowerTrack_USB.TXT
 ******************************************************************************/
 
