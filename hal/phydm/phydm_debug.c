@@ -1348,7 +1348,6 @@ void phydm_basic_profile(
 	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "EDCA Turbo", EDCATURBO_VERSION));
 #endif
 	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "path Diversity", PATHDIV_VERSION));
-	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "LA mode", DYNAMIC_LA_MODE));
 	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "Dynamic RX path", DYNAMIC_RX_PATH_VERSION));
 
 #if (RTL8822B_SUPPORT == 1)
