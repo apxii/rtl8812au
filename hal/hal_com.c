@@ -9945,6 +9945,12 @@ void hal_set_crystal_cap(_adapter *adapter, u8 crystal_cap)
 		phy_set_bb_reg(adapter, REG_MAC_PHY_CTRL, 0x7FF80000, (crystal_cap | (crystal_cap << 6)));
 		break;
 #endif
+#if defined(CONFIG_RTL8821A)
+	case RTL8821:
+		/* write 0x2C[23:18] = 0x2C[17:12] = CrystalCap */
+		phy_set_bb_reg(adapter, REG_MAC_PHY_CTRL, 0x00FFF000, (crystal_cap | (crystal_cap << 6)));
+		break;
+#endif
 	default:
 		rtw_warn_on(1);
 	}
