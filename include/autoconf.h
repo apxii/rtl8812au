@@ -327,6 +327,5 @@
 
 /* #define DBG_HAL_INIT_PROFILING */
 
-/*#define DBG_MEMORY_LEAK*/
 /*#define DBG_UDP_PKT_LOSE_11AC */
 #define	DBG_RX_DFRAME_RAW_DATA
