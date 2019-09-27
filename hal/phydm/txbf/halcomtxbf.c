@@ -15,13 +15,6 @@ hal_com_txbf_beamform_init(
 	void			*p_dm_void
 )
 {
-	struct PHY_DM_STRUCT	*p_dm_odm = (struct PHY_DM_STRUCT *)p_dm_void;
-	boolean		is_iqgen_setting_ok = false;
-
-	if (p_dm_odm->support_ic_type & ODM_RTL8814A) {
-		is_iqgen_setting_ok = phydm_beamforming_set_iqgen_8814A(p_dm_odm);
-		ODM_RT_TRACE(p_dm_odm, PHYDM_COMP_TXBF, ODM_DBG_LOUD, ("[%s] is_iqgen_setting_ok = %d\n", __func__, is_iqgen_setting_ok));
-	}
 }
 
 /*Only used for MU BFer Entry when get GID management frame (self is as MU STA)*/
@@ -30,10 +23,6 @@ hal_com_txbf_config_gtab(
 	void			*p_dm_void
 )
 {
-	struct PHY_DM_STRUCT	*p_dm_odm = (struct PHY_DM_STRUCT *)p_dm_void;
-
-	if (p_dm_odm->support_ic_type & ODM_RTL8822B)
-		hal_txbf_8822b_config_gtab(p_dm_odm);
 }
 
 void
@@ -192,12 +181,6 @@ hal_com_txbf_enter_work_item_callback(
 
 	if (p_dm_odm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821))
 		hal_txbf_jaguar_enter(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8192E)
-		hal_txbf_8192e_enter(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8814A)
-		hal_txbf_8814a_enter(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8822B)
-		hal_txbf_8822b_enter(p_dm_odm, idx);
 }
 
 void
@@ -223,12 +206,6 @@ hal_com_txbf_leave_work_item_callback(
 
 	if (p_dm_odm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821))
 		hal_txbf_jaguar_leave(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8192E)
-		hal_txbf_8192e_leave(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8814A)
-		hal_txbf_8814a_leave(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8822B)
-		hal_txbf_8822b_leave(p_dm_odm, idx);
 }
 
 
@@ -254,12 +231,6 @@ hal_com_txbf_fw_ndpa_work_item_callback(
 
 	if (p_dm_odm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821))
 		hal_txbf_jaguar_fw_txbf(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8192E)
-		hal_txbf_8192e_fw_tx_bf(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8814A)
-		hal_txbf_8814a_fw_txbf(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8822B)
-		hal_txbf_8822b_fw_txbf(p_dm_odm, idx);
 }
 
 void
@@ -309,11 +280,6 @@ hal_com_txbf_rate_work_item_callback(
 
 	if (p_dm_odm->support_ic_type & ODM_RTL8812)
 		hal_txbf_8812a_set_ndpa_rate(p_dm_odm, BW, rate);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8192E)
-		hal_txbf_8192e_set_ndpa_rate(p_dm_odm, BW, rate);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8814A)
-		hal_txbf_8814a_set_ndpa_rate(p_dm_odm, BW, rate);
-
 }
 
 
@@ -364,12 +330,6 @@ hal_com_txbf_status_work_item_callback(
 
 	if (p_dm_odm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821))
 		hal_txbf_jaguar_status(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8192E)
-		hal_txbf_8192e_status(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8814A)
-		hal_txbf_8814a_status(p_dm_odm, idx);
-	else if (p_dm_odm->support_ic_type & ODM_RTL8822B)
-		hal_txbf_8822b_status(p_dm_odm, idx);
 }
 
 void
@@ -381,19 +341,6 @@ hal_com_txbf_reset_tx_path_work_item_callback(
 #endif
 )
 {
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	PHAL_DATA_TYPE	p_hal_data = GET_HAL_DATA(adapter);
-	struct PHY_DM_STRUCT		*p_dm_odm = &p_hal_data->DM_OutSrc;
-#else
-	struct PHY_DM_STRUCT	*p_dm_odm = (struct PHY_DM_STRUCT *)p_dm_void;
-#endif
-	struct _HAL_TXBF_INFO	*p_txbf_info = &p_dm_odm->beamforming_info.txbf_info;
-
-	u8			idx = p_txbf_info->txbf_idx;
-
-	if (p_dm_odm->support_ic_type & ODM_RTL8814A)
-		hal_txbf_8814a_reset_tx_path(p_dm_odm, idx);
-
 }
 
 void
@@ -405,15 +352,6 @@ hal_com_txbf_get_tx_rate_work_item_callback(
 #endif
 )
 {
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	PHAL_DATA_TYPE	p_hal_data = GET_HAL_DATA(adapter);
-	struct PHY_DM_STRUCT		*p_dm_odm = &p_hal_data->DM_OutSrc;
-#else
-	struct PHY_DM_STRUCT	*p_dm_odm = (struct PHY_DM_STRUCT *)p_dm_void;
-#endif
-
-	if (p_dm_odm->support_ic_type & ODM_RTL8814A)
-		hal_txbf_8814a_get_tx_rate(p_dm_odm);
 }
 
 
@@ -513,20 +451,10 @@ hal_com_txbf_get(
 		} else
 			*p_boolean = false;
 	} else if (get_type == TXBF_GET_MU_MIMO_STA) {
-#if ((RTL8822B_SUPPORT == 1) || (RTL8821C_SUPPORT == 1))
-		if (IS_HARDWARE_TYPE_8822B(adapter) || IS_HARDWARE_TYPE_8821C(adapter))
-			*p_boolean = true;
-		else
-#endif
 			*p_boolean = false;
 
 
 	} else if (get_type == TXBF_GET_MU_MIMO_AP) {
-#if (RTL8822B_SUPPORT == 1)
-		if (IS_HARDWARE_TYPE_8822B(adapter))
-			*p_boolean = true;
-		else
-#endif
 			*p_boolean = false;
 	}
 
