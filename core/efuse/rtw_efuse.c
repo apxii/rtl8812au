@@ -1066,13 +1066,6 @@ efuse_ShadowRead4Byte(
  * 11/12/2008	MHC		Create Version 0.
  *
  *---------------------------------------------------------------------------*/
-#ifdef PLATFORM
-static void
-efuse_ShadowWrite1Byte(
-	IN	PADAPTER	pAdapter,
-	IN	u16		Offset,
-	IN	u8		Value);
-#endif /* PLATFORM */
 static void
 efuse_ShadowWrite1Byte(
 	IN	PADAPTER	pAdapter,
@@ -1354,9 +1347,7 @@ u8 mac_hidden_wl_func_to_hal_wl_func(u8 func)
 	return wl_func;
 }
 
-#ifdef PLATFORM_LINUX
 #ifdef CONFIG_ADAPTOR_INFO_CACHING_FILE
-/* #include <rtw_eeprom.h> */
 
 int isAdaptorInfoFileValid(void)
 {
@@ -1608,5 +1599,3 @@ exit:
 	return ret;
 }
 #endif /* CONFIG_EFUSE_CONFIG_FILE */
-
-#endif /* PLATFORM_LINUX */

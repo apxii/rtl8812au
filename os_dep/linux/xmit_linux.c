@@ -123,7 +123,6 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 	}
 
 	if (flag) {
-#ifdef CONFIG_USB_HCI
 		int i;
 		for (i = 0; i < 8; i++) {
 			pxmitbuf->pxmit_urb[i] = usb_alloc_urb(0, GFP_KERNEL);
@@ -132,7 +131,6 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 				return _FAIL;
 			}
 		}
-#endif
 	}
 
 	return _SUCCESS;
@@ -141,7 +139,6 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 void rtw_os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf, u32 free_sz, u8 flag)
 {
 	if (flag) {
-#ifdef CONFIG_USB_HCI
 		int i;
 
 		for (i = 0; i < 8; i++) {
@@ -150,7 +147,6 @@ void rtw_os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 				usb_free_urb(pxmitbuf->pxmit_urb[i]);
 			}
 		}
-#endif
 	}
 
 	if (free_sz > 0) {

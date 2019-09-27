@@ -26,7 +26,6 @@ enum odm_board_type_e boardType(u8 InterfaceSel)
 {
 	enum odm_board_type_e        board	= ODM_BOARD_DEFAULT;
 
-#if defined(CONFIG_USB_HCI)
 	INTERFACE_SELECT_USB    usb	= (INTERFACE_SELECT_USB)InterfaceSel;
 	switch (usb) {
 	case INTF_SEL1_USB_High_Power:
@@ -48,8 +47,6 @@ enum odm_board_type_e boardType(u8 InterfaceSel)
 		board = ODM_BOARD_DEFAULT;
 		break;
 	}
-
-#endif
 
 	return board;
 }
@@ -198,9 +195,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_TX_TP, &(dvobj->traffic_stat.cur_tx_tp));
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_RX_TP, &(dvobj->traffic_stat.cur_rx_tp));
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_ANT_TEST, &(pHalData->antenna_test));
-#ifdef CONFIG_USB_HCI
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_HUBUSBMODE, &(dvobj->usb_speed));
-#endif
 	for (i = 0; i < ODM_ASSOCIATE_ENTRY_NUM; i++)
 		odm_cmn_info_ptr_array_hook(pDM_Odm, ODM_CMNINFO_STA_STATUS, i, NULL);
 

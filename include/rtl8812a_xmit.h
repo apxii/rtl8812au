@@ -323,7 +323,6 @@ void rtl8812a_fill_txdesc_phy(PADAPTER padapter, struct pkt_attrib *pattrib, u8 
 void fill_txdesc_force_bmc_camid(struct pkt_attrib *pattrib, u8 *ptxdesc);
 #endif
 
-#ifdef CONFIG_USB_HCI
 s32 rtl8812au_init_xmit_priv(PADAPTER padapter);
 void rtl8812au_free_xmit_priv(PADAPTER padapter);
 s32 rtl8812au_hal_xmit(PADAPTER padapter, struct xmit_frame *pxmitframe);
@@ -332,7 +331,6 @@ s32	 rtl8812au_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmi
 s32 rtl8812au_xmit_buf_handler(PADAPTER padapter);
 void rtl8812au_xmit_tasklet(void *priv);
 s32 rtl8812au_xmitframe_complete(_adapter *padapter, struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
-#endif
 
 #ifdef CONFIG_TX_EARLY_MODE
 void UpdateEarlyModeInfo8812(struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);

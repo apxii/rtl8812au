@@ -22,12 +22,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#if defined(PLATFORM_LINUX) && defined (PLATFORM_WINDOWS)
-
-	#error "Shall be Linux or Windows, but not both!\n"
-
-#endif
-
 static u8 SNAP_ETH_TYPE_IPX[2] = {0x81, 0x37};
 
 static u8 SNAP_ETH_TYPE_APPLETALK_AARP[2] = {0x80, 0xf3};
@@ -145,13 +139,9 @@ sint _rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 
 	}
 
-#ifdef CONFIG_USB_HCI
-
 	ATOMIC_SET(&(precvpriv->rx_pending_cnt), 1);
 
 	_rtw_init_sema(&precvpriv->allrxreturnevt, 0);
-
-#endif
 
 	res = rtw_hal_init_recv_priv(padapter);
 
@@ -1986,20 +1976,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	if (ptdlsinfo->ch_sensing == 1 && ptdlsinfo->cur_channel != 0)
 		ptdlsinfo->collect_pkt_num[ptdlsinfo->cur_channel - 1]++;
 #endif /* CONFIG_TDLS */
-
-#ifdef RTK_DMP_PLATFORM
-	if (0) {
-		RTW_INFO("++\n");
-		{
-			int i;
-			for (i = 0; i < 64; i = i + 8)
-				RTW_INFO("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:", *(ptr + i),
-					*(ptr + i + 1), *(ptr + i + 2) , *(ptr + i + 3) , *(ptr + i + 4), *(ptr + i + 5), *(ptr + i + 6), *(ptr + i + 7));
-
-		}
-		RTW_INFO("--\n");
-	}
-#endif /* RTK_DMP_PLATFORM */
 
 	/* add version chk */
 	if (ver != 0) {
@@ -4131,11 +4107,9 @@ thread_return rtw_recv_thread(thread_context context)
 	_adapter *adapter = (_adapter *)context;
 	struct recv_priv *recvpriv = &adapter->recvpriv;
 	s32 err = _SUCCESS;
-#ifdef PLATFORM_LINUX
 	struct sched_param param = { .sched_priority = 1 };
 
 	sched_setscheduler(current, SCHED_FIFO, &param);
-#endif /* PLATFORM_LINUX */
 	thread_enter("RTW_RECV_THREAD");
 
 	RTW_INFO(FUNC_ADPT_FMT" enter\n", FUNC_ADPT_ARG(adapter));

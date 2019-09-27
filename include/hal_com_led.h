@@ -156,8 +156,6 @@ typedef enum _LED_PIN {
 /* ********************************************************************************
  * USB  LED Definition.
  * ******************************************************************************** */
-#if defined(CONFIG_USB_HCI)
-
 #define IS_LED_WPS_BLINKING(_LED_USB)	(((PLED_USB)_LED_USB)->CurrLedState == LED_BLINK_WPS \
 		|| ((PLED_USB)_LED_USB)->CurrLedState == LED_BLINK_WPS_STOP \
 		|| ((PLED_USB)_LED_USB)->bLedWPSBlinkInProgress)
@@ -222,8 +220,6 @@ LedControlUSB(
 	IN	PADAPTER		Adapter,
 	IN	LED_CTL_MODE		LedAction
 );
-
-#endif
 
 struct led_priv {
 	/* add for led controll */

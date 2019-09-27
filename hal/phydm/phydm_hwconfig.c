@@ -489,119 +489,6 @@ phydm_rate_to_num_ss(
 
 #if (ODM_IC_11N_SERIES_SUPPORT == 1)
 
-#if (RTL8703B_SUPPORT == 1)
-s8
-odm_CCKRSSI_8703B(
-	u16	LNA_idx,
-	u8 VGA_idx
-)
-{
-	s8	rx_pwr_all = 0x00;
-
-	switch (LNA_idx) {
-	case 0xf:
-		rx_pwr_all = -48 - (2 * VGA_idx);
-		break;
-	case 0xb:
-		rx_pwr_all = -42 - (2 * VGA_idx); /*TBD*/
-		break;
-	case 0xa:
-		rx_pwr_all = -36 - (2 * VGA_idx);
-		break;
-	case 8:
-		rx_pwr_all = -32 - (2 * VGA_idx);
-		break;
-	case 7:
-		rx_pwr_all = -19 - (2 * VGA_idx);
-		break;
-	case 4:
-		rx_pwr_all = -6 - (2 * VGA_idx);
-		break;
-	case 0:
-		rx_pwr_all = -2 - (2 * VGA_idx);
-		break;
-	default:
-		/*rx_pwr_all = -53+(2*(31-VGA_idx));*/
-		/*dbg_print("wrong LNA index\n");*/
-		break;
-
-	}
-	return	rx_pwr_all;
-}
-#endif
-
-#if (RTL8195A_SUPPORT == 1)
-s8
-odm_CCKRSSI_8195A(
-	struct PHY_DM_STRUCT *p_dm_odm,
-	u16		LNA_idx,
-	u8 VGA_idx
-)
-{
-	s8	rx_pwr_all = 0;
-	s8	lna_gain = 0;
-	s8	lna_gain_table_0[8] = {0, -8, -15, -22, -29, -36, -45, -54};
-	s8	lna_gain_table_1[8] = {0, -8, -15, -22, -29, -36, -45, -54};/*use 8195A to calibrate this table. 2016.06.24, Dino*/
-
-	if (p_dm_odm->cck_agc_report_type == 0)
-		lna_gain = lna_gain_table_0[LNA_idx];
-	else
-		lna_gain = lna_gain_table_1[LNA_idx];
-
-	rx_pwr_all = lna_gain - (2 * VGA_idx);
-
-	return	rx_pwr_all;
-}
-#endif
-
-#if (RTL8192E_SUPPORT == 1)
-s8
-odm_CCKRSSI_8192E(
-	struct PHY_DM_STRUCT *p_dm_odm,
-	u16		LNA_idx,
-	u8 VGA_idx
-)
-{
-	s8	rx_pwr_all = 0;
-	s8	lna_gain = 0;
-	s8	lna_gain_table_0[8] = {15, 9, -10, -21, -23, -27, -43, -44};
-	s8	lna_gain_table_1[8] = {24, 18, 13, -4, -11, -18, -31, -36};/*use 8192EU to calibrate this table. 2015.12.15, Dino*/
-
-	if (p_dm_odm->cck_agc_report_type == 0)
-		lna_gain = lna_gain_table_0[LNA_idx];
-	else
-		lna_gain = lna_gain_table_1[LNA_idx];
-
-	rx_pwr_all = lna_gain - (2 * VGA_idx);
-
-	return	rx_pwr_all;
-}
-#endif
-
-#if (RTL8188E_SUPPORT == 1)
-s8
-odm_CCKRSSI_8188E(
-	struct PHY_DM_STRUCT *p_dm_odm,
-	u16		LNA_idx,
-	u8 VGA_idx
-)
-{
-	s8	rx_pwr_all = 0;
-	s8	lna_gain = 0;
-	s8	lna_gain_table_0[8] = {17, -1, -13, -29, -32, -35, -38, -41};/*only use lna0/1/2/3/7*/
-	s8	lna_gain_table_1[8] = {29, 20, 12, 3, -6, -15, -24, -33}; /*only use lna3 /7*/
-
-	if (p_dm_odm->cut_version >= ODM_CUT_I) /*SMIC*/
-		lna_gain = lna_gain_table_0[LNA_idx];
-	else	 /*TSMC*/
-		lna_gain = lna_gain_table_1[LNA_idx];
-
-	rx_pwr_all = lna_gain - (2 * VGA_idx);
-
-	return	rx_pwr_all;
-}
-#endif
-
 void
 odm_rx_phy_status92c_series_parsing(
 	struct PHY_DM_STRUCT *p_dm_odm,
@@ -639,17 +526,6 @@ odm_rx_phy_status92c_series_parsing(
 
 		if (p_dm_odm->support_ic_type & (ODM_RTL8703B)) {
 
-#if (RTL8703B_SUPPORT == 1)
-			if (p_dm_odm->cck_agc_report_type == 1) {  /*4 bit LNA*/
-
-				u8 cck_agc_rpt_b = (p_phy_sta_rpt->cck_rpt_b_ofdm_cfosho_b & BIT(7)) ? 1 : 0;
-
-				LNA_idx = (cck_agc_rpt_b << 3) | ((cck_agc_rpt & 0xE0) >> 5);
-				VGA_idx = (cck_agc_rpt & 0x1F);
-
-				rx_pwr_all = odm_CCKRSSI_8703B(LNA_idx, VGA_idx);
-			}
-#endif
 		} else { /*3 bit LNA*/
 
 			LNA_idx = ((cck_agc_rpt & 0xE0) >> 5);
@@ -657,39 +533,7 @@ odm_rx_phy_status92c_series_parsing(
 
 			if (p_dm_odm->support_ic_type & (ODM_RTL8188E)) {
 
-#if (RTL8188E_SUPPORT == 1)
-				rx_pwr_all = odm_CCKRSSI_8188E(p_dm_odm, LNA_idx, VGA_idx);
-				/**/
-#endif
 			}
-#if (RTL8192E_SUPPORT == 1)
-			else if (p_dm_odm->support_ic_type & (ODM_RTL8192E)) {
-
-				rx_pwr_all = odm_CCKRSSI_8192E(p_dm_odm, LNA_idx, VGA_idx);
-				/**/
-			}
-#endif
-#if (RTL8723B_SUPPORT == 1)
-			else if (p_dm_odm->support_ic_type & (ODM_RTL8723B)) {
-
-				rx_pwr_all = odm_CCKRSSI_8723B(LNA_idx, VGA_idx);
-				/**/
-			}
-#endif
-#if (RTL8188F_SUPPORT == 1)
-			else if (p_dm_odm->support_ic_type & (ODM_RTL8188F)) {
-
-				rx_pwr_all = odm_CCKRSSI_8188F(LNA_idx, VGA_idx);
-				/**/
-			}
-#endif
-#if (RTL8195A_SUPPORT == 1)
-			else if (p_dm_odm->support_ic_type & (ODM_RTL8195A)) {
-
-				rx_pwr_all = odm_CCKRSSI_8195A(LNA_idx, VGA_idx);
-				/**/
-			}
-#endif
 		}
 
 		ODM_RT_TRACE(p_dm_odm, ODM_COMP_RSSI_MONITOR, ODM_DBG_LOUD, ("ext_lna_gain (( %d )), LNA_idx: (( 0x%x )), VGA_idx: (( 0x%x )), rx_pwr_all: (( %d ))\n",
@@ -1434,15 +1278,6 @@ odm_process_rssi_for_dm(
 	odm_s0s1_sw_ant_div_by_ctrl_frame_process_rssi(p_dm_odm, p_phy_info, p_pktinfo);
 #endif
 
-	/*  */
-	/* 2012/05/30 MH/Luke.Lee Add some description */
-	/* In windows driver: AP/IBSS mode STA */
-	/*  */
-	/* if (p_dm_odm->support_platform == ODM_WIN) */
-	/* { */
-	/*	p_entry = p_dm_odm->p_odm_sta_info[p_dm_odm->pAidMap[p_pktinfo->station_id-1]]; */
-	/* } */
-	/* else */
 	p_entry = p_dm_odm->p_odm_sta_info[p_pktinfo->station_id];
 
 	if (!IS_STA_VALID(p_entry)) {
@@ -2006,107 +1841,6 @@ odm_config_rf_with_header_file(
 
 #endif/* (DM_ODM_SUPPORT_TYPE !=  ODM_AP) */
 
-	/* 1 All platforms support */
-#if (RTL8188E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188E) {
-		if (config_type == CONFIG_RF_RADIO) {
-			if (e_rf_path == ODM_RF_PATH_A)
-				READ_AND_CONFIG_MP(8188e, _radioa);
-		} else if (config_type == CONFIG_RF_TXPWR_LMT)
-			READ_AND_CONFIG_MP(8188e, _txpwr_lmt);
-	}
-#endif
-#if (RTL8723B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723B) {
-		if (config_type == CONFIG_RF_RADIO)
-			READ_AND_CONFIG_MP(8723b, _radioa);
-		else if (config_type == CONFIG_RF_TXPWR_LMT)
-			READ_AND_CONFIG_MP(8723b, _txpwr_lmt);
-	}
-#endif
-#if (RTL8814A_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8814A) {
-		if (config_type == CONFIG_RF_RADIO) {
-			if (e_rf_path == ODM_RF_PATH_A)
-				READ_AND_CONFIG_MP(8814a, _radioa);
-			else if (e_rf_path == ODM_RF_PATH_B)
-				READ_AND_CONFIG_MP(8814a, _radiob);
-			else if (e_rf_path == ODM_RF_PATH_C)
-				READ_AND_CONFIG_MP(8814a, _radioc);
-			else if (e_rf_path == ODM_RF_PATH_D)
-				READ_AND_CONFIG_MP(8814a, _radiod);
-		} else if (config_type == CONFIG_RF_TXPWR_LMT) {
-			if (p_dm_odm->rfe_type == 0) 
-				READ_AND_CONFIG_MP(8814a,_txpwr_lmt_type0);
-			else if (p_dm_odm->rfe_type == 1)
-				READ_AND_CONFIG_MP(8814a,_txpwr_lmt_type1);				
-			else if (p_dm_odm->rfe_type == 2)
-				READ_AND_CONFIG_MP(8814a,_txpwr_lmt_type2);		
-			else if (p_dm_odm->rfe_type == 3)
-				READ_AND_CONFIG_MP(8814a,_txpwr_lmt_type3);		
-			else if (p_dm_odm->rfe_type == 5)
-				READ_AND_CONFIG_MP(8814a,_txpwr_lmt_type5);		
-			else if (p_dm_odm->rfe_type == 7)
-				READ_AND_CONFIG_MP(8814a,_txpwr_lmt_type7);				
-			else
-				READ_AND_CONFIG_MP(8814a,_txpwr_lmt);
-		}
-	}
-#endif
-#if (RTL8703B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8703B) {
-		if (config_type == CONFIG_RF_RADIO) {
-			if (e_rf_path == ODM_RF_PATH_A)
-				READ_AND_CONFIG_MP(8703b, _radioa);
-		}
-	}
-#endif
-#if (RTL8188F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188F) {
-		if (config_type == CONFIG_RF_RADIO) {
-			if (e_rf_path == ODM_RF_PATH_A)
-				READ_AND_CONFIG_MP(8188f, _radioa);
-		} else if (config_type == CONFIG_RF_TXPWR_LMT)
-			READ_AND_CONFIG_MP(8188f, _txpwr_lmt);
-	}
-#endif
-#if (RTL8822B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8822B) {
-		if (config_type == CONFIG_RF_RADIO) {
-			if (e_rf_path == ODM_RF_PATH_A)
-				READ_AND_CONFIG_MP(8822b, _radioa);
-			else if (e_rf_path == ODM_RF_PATH_B)
-				READ_AND_CONFIG_MP(8822b, _radiob);
-		} else if (config_type == CONFIG_RF_TXPWR_LMT) {
-			if (p_dm_odm->rfe_type == 5)
-				READ_AND_CONFIG_MP(8822b, _txpwr_lmt_type5);
-			else
-				READ_AND_CONFIG_MP(8822b, _txpwr_lmt);
-		}
-	}
-#endif
-
-#if (RTL8197F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8197F) {
-		if (config_type == CONFIG_RF_RADIO) {
-			if (e_rf_path == ODM_RF_PATH_A)
-				READ_AND_CONFIG_MP(8197f, _radioa);
-			else if (e_rf_path == ODM_RF_PATH_B)
-				READ_AND_CONFIG_MP(8197f, _radiob);
-		}
-	}
-#endif
-
-#if (RTL8821C_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8821C) {
-		if (config_type == CONFIG_RF_RADIO) {
-			if (e_rf_path == ODM_RF_PATH_A)
-				READ_AND_CONFIG(8821c, _radioa);
-		} else if (config_type == CONFIG_RF_TXPWR_LMT)
-			READ_AND_CONFIG(8821c, _txpwr_lmt);
-	}
-#endif
-
 	return HAL_STATUS_SUCCESS;
 }
 
@@ -2174,16 +1908,6 @@ odm_config_bb_with_header_file(
 #if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
 			else if (p_mgnt_info->CustomerID == RT_CID_WNC_NEC && p_dm_odm->is_mp_chip)
 				READ_AND_CONFIG_MP(8812a, _phy_reg_pg_nec);
-#if RT_PLATFORM == PLATFORM_MACOSX
-			/*{1827}{1024} for BUFFALO power by rate table. Isaiah 2013-11-29*/
-			else if (p_mgnt_info->CustomerID == RT_CID_DNI_BUFFALO)
-				READ_AND_CONFIG_MP(8812a, _phy_reg_pg_dni);
-			/* TP-Link T4UH, Isaiah 2015-03-16*/
-			else if (p_mgnt_info->CustomerID == RT_CID_TPLINK_HPWR) {
-				dbg_print("RT_CID_TPLINK_HPWR:: _PHY_REG_PG_TPLINK\n");
-				READ_AND_CONFIG_MP(8812a, _phy_reg_pg_tplink);
-			}
-#endif
 #endif
 			else
 				READ_AND_CONFIG_MP(8812a, _phy_reg_pg);
@@ -2246,133 +1970,6 @@ odm_config_bb_with_header_file(
 
 #endif/* (DM_ODM_SUPPORT_TYPE !=  ODM_AP) */
 
-
-	/* 1 All platforms support */
-#if (RTL8188E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188E) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG_MP(8188e, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG_MP(8188e, _agc_tab);
-		else if (config_type == CONFIG_BB_PHY_REG_PG)
-			READ_AND_CONFIG_MP(8188e, _phy_reg_pg);
-	}
-#endif
-#if (RTL8723B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723B) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG_MP(8723b, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG_MP(8723b, _agc_tab);
-		else if (config_type == CONFIG_BB_PHY_REG_PG)
-			READ_AND_CONFIG_MP(8723b, _phy_reg_pg);
-	}
-#endif
-#if (RTL8814A_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8814A) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG_MP(8814a, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG_MP(8814a, _agc_tab);
-		else if (config_type == CONFIG_BB_PHY_REG_PG) {
-			if (p_dm_odm->rfe_type == 0) 
-				READ_AND_CONFIG_MP(8814a,_phy_reg_pg_type0);
-			else if (p_dm_odm->rfe_type == 2)
-				READ_AND_CONFIG_MP(8814a,_phy_reg_pg_type2);				
-			else if (p_dm_odm->rfe_type == 3)
-				READ_AND_CONFIG_MP(8814a,_phy_reg_pg_type3);		
-			else if (p_dm_odm->rfe_type == 4)
-				READ_AND_CONFIG_MP(8814a,_phy_reg_pg_type4);		
-			else if (p_dm_odm->rfe_type == 5)
-				READ_AND_CONFIG_MP(8814a,_phy_reg_pg_type5);		
-			else if (p_dm_odm->rfe_type == 7)
-				READ_AND_CONFIG_MP(8814a,_phy_reg_pg_type7);					
-			else
-				READ_AND_CONFIG_MP(8814a,_phy_reg_pg);
-		}
-		else if (config_type == CONFIG_BB_PHY_REG_MP)
-			READ_AND_CONFIG_MP(8814a, _phy_reg_mp);
-	}
-#endif
-#if (RTL8703B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8703B) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG_MP(8703b, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG_MP(8703b, _agc_tab);
-		else if (config_type == CONFIG_BB_PHY_REG_PG)
-			READ_AND_CONFIG_MP(8703b, _phy_reg_pg);
-	}
-#endif
-#if (RTL8188F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188F) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG_MP(8188f, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG_MP(8188f, _agc_tab);
-		else if (config_type == CONFIG_BB_PHY_REG_PG)
-			READ_AND_CONFIG_MP(8188f, _phy_reg_pg);
-	}
-#endif
-#if (RTL8822B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8822B) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG_MP(8822b, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG_MP(8822b, _agc_tab);
-		else if (config_type == CONFIG_BB_PHY_REG_PG)
-			READ_AND_CONFIG_MP(8822b, _phy_reg_pg);
-		/*else if (config_type == CONFIG_BB_PHY_REG_MP)*/
-		/*READ_AND_CONFIG_MP(8822b, _phy_reg_mp);*/
-	}
-#endif
-
-#if (RTL8197F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8197F) {
-		if (config_type == CONFIG_BB_PHY_REG) {
-			READ_AND_CONFIG_MP(8197f, _phy_reg);
-			if (p_dm_odm->cut_version == ODM_CUT_A)
-				phydm_phypara_a_cut(p_dm_odm);
-		} else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG_MP(8197f, _agc_tab);
-		/*		else if(config_type == CONFIG_BB_PHY_REG_PG)
-					READ_AND_CONFIG_MP(8197f, _phy_reg_pg);
-				else if(config_type == CONFIG_BB_PHY_REG_MP)
-					READ_AND_CONFIG_MP(8197f, _phy_reg_mp); */
-	}
-#endif
-
-#if (RTL8821C_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8821C) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG(8821c, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB) {
-			READ_AND_CONFIG(8821c, _agc_tab);
-			/* According to RFEtype, choosing correct AGC table*/
-			if (p_dm_odm->default_rf_set_8821c == SWITCH_TO_BTG)
-				AGC_DIFF_CONFIG_MP(8821c, btg);
-		} else if (config_type == CONFIG_BB_PHY_REG_PG)
-			READ_AND_CONFIG(8821c, _phy_reg_pg);
-		else if (config_type == CONFIG_BB_AGC_TAB_DIFF) {
-			if (p_dm_odm->current_rf_set_8821c == SWITCH_TO_BTG)
-				AGC_DIFF_CONFIG_MP(8821c, btg);
-			else if (p_dm_odm->current_rf_set_8821c == SWITCH_TO_WLG)
-				AGC_DIFF_CONFIG_MP(8821c, wlg);
-		}
-	}
-#endif
-
-#if (RTL8195A_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8195A) {
-		if (config_type == CONFIG_BB_PHY_REG)
-			READ_AND_CONFIG(8195a, _phy_reg);
-		else if (config_type == CONFIG_BB_AGC_TAB)
-			READ_AND_CONFIG(8195a, _agc_tab);
-		else if (config_type == CONFIG_BB_PHY_REG_PG)
-			READ_AND_CONFIG(8195a, _phy_reg_pg);
-	}
-#endif
-
 	return HAL_STATUS_SUCCESS;
 }
 
@@ -2404,62 +2001,8 @@ odm_config_mac_with_header_file(
 		ODM_RT_TRACE(p_dm_odm, ODM_COMP_INIT, ODM_DBG_LOUD, ("<===8821_ODM_ConfigMACwithHeaderFile\n"));
 	}
 #endif
-#if (RTL8192E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8192E)
-		READ_AND_CONFIG_MP(8192e, _mac_reg);
-#endif
-#if (RTL8723D_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723D)
-		READ_AND_CONFIG_MP(8723d, _mac_reg);
-#endif
-/* JJ ADD 20161014 */
-#if (RTL8710B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8710B)
-		READ_AND_CONFIG_MP(8710b, _mac_reg);
-#endif
 
 #endif/* (DM_ODM_SUPPORT_TYPE !=  ODM_AP) */
-
-	/* 1 All platforms support */
-#if (RTL8188E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188E)
-		READ_AND_CONFIG_MP(8188e, _mac_reg);
-#endif
-#if (RTL8723B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723B)
-		READ_AND_CONFIG_MP(8723b, _mac_reg);
-#endif
-#if (RTL8814A_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8814A)
-		READ_AND_CONFIG_MP(8814a, _mac_reg);
-#endif
-#if (RTL8703B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8703B)
-		READ_AND_CONFIG_MP(8703b, _mac_reg);
-#endif
-#if (RTL8188F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188F)
-		READ_AND_CONFIG_MP(8188f, _mac_reg);
-#endif
-#if (RTL8822B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8822B)
-		READ_AND_CONFIG_MP(8822b, _mac_reg);
-#endif
-
-#if (RTL8197F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8197F)
-		READ_AND_CONFIG_MP(8197f, _mac_reg);
-#endif
-
-#if (RTL8821C_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8821C)
-		READ_AND_CONFIG(8821c, _mac_reg);
-#endif
-
-#if (RTL8195A_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8195A)
-		READ_AND_CONFIG_MP(8195a, _mac_reg);
-#endif
 
 	return HAL_STATUS_SUCCESS;
 }
@@ -2474,48 +2017,6 @@ odm_config_fw_with_header_file(
 {
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 
-#if (RTL8188E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188E) {
-#ifdef CONFIG_SFW_SUPPORTED
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8188e_t, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8188e_t, _fw_wowlan);
-		else if (config_type == CONFIG_FW_NIC_2)
-			READ_FIRMWARE_MP(8188e_s, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN_2)
-			READ_FIRMWARE_MP(8188e_s, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		if (config_type == CONFIG_FW_AP)
-			READ_FIRMWARE_MP(8188e_t, _fw_ap);
-		else if (config_type == CONFIG_FW_AP_2)
-			READ_FIRMWARE_MP(8188e_s, _fw_ap);
-#endif /* CONFIG_AP_WOWLAN */
-#else
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8188e_t, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8188e_t, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == CONFIG_FW_AP)
-			READ_FIRMWARE_MP(8188e_t, _fw_ap);
-#endif /* CONFIG_AP_WOWLAN */
-#endif
-	}
-#endif
-#if (RTL8723B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723B) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8723b, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8723b, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == config_fw_ap_wowlan)
-			READ_FIRMWARE(8723b, _fw_ap);
-#endif
-
-	}
-#endif /* #if (RTL8723B_SUPPORT == 1) */
 #if (RTL8812A_SUPPORT == 1)
 	if (p_dm_odm->support_ic_type == ODM_RTL8812) {
 		if (config_type == CONFIG_FW_NIC)
@@ -2544,138 +2045,6 @@ odm_config_fw_with_header_file(
 			READ_FIRMWARE_MP(8821a, _fw_nic_bt);
 	}
 #endif
-#if (RTL8192E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8192E) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8192e, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8192e, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == config_fw_ap_wowlan)
-			READ_FIRMWARE_MP(8192e, _fw_ap);
-#endif
-	}
-#endif
-#if (RTL8723D_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723D) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8723d, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN) {
-			READ_FIRMWARE_MP(8723d, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-			else if (config_type == config_fw_ap_wowlan)
-				READ_FIRMWARE_MP(8723d, _fw_ap);
-#endif
-		}
-	}
-#endif
-/* JJ ADD 20161014 */
-#if (RTL8710B_SUPPORT == 1)
-		if (p_dm_odm->support_ic_type == ODM_RTL8710B) {
-			if (config_type == CONFIG_FW_NIC)
-				READ_FIRMWARE_MP(8710b, _fw_nic);
-			else if (config_type == CONFIG_FW_WOWLAN) {
-				READ_FIRMWARE_MP(8710b, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-				else if (config_type == config_fw_ap_wowlan)
-					READ_FIRMWARE_MP(8710b, _fw_ap);
-#endif
-			}
-		}
-#endif
-
-	/*#if (RTL8814A_SUPPORT == 1)
-		if (p_dm_odm->support_ic_type == ODM_RTL8814A)
-		{
-			if (config_type == CONFIG_FW_NIC)
-				READ_FIRMWARE_MP(8814a, _fw_nic);
-			else if (config_type == config_fw_wowlan)
-				READ_FIRMWARE_MP(8814a, _fw_wowlan);
-			#ifdef CONFIG_AP_WOWLAN
-			else if (config_type == config_fw_ap_wowlan)
-				READ_FIRMWARE_MP(8814a, _fw_ap);
-			#endif
-		}
-	#endif */
-
-#if (RTL8814A_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8814A) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8814a, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8814a, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == config_fw_ap_wowlan)
-			READ_FIRMWARE_MP(8814a, _fw_ap);
-#endif
-	}
-#endif
-
-#if (RTL8703B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8703B) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8703b, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8703b, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == config_fw_ap_wowlan)
-			READ_FIRMWARE(8703b, _fw_ap);
-#endif
-	}
-#endif
-
-#if (RTL8188F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188F) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8188f, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8188f, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == CONFIG_FW_AP)
-			READ_FIRMWARE_MP(8188f, _fw_ap);
-#endif
-	}
-#endif
-
-#if (RTL8822B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8822B) {
-
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8822b, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8822b, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == config_fw_ap_wowlan)
-			READ_FIRMWARE(8822b, _fw_ap);
-#endif
-	}
-#endif
-
-#if (RTL8197F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8197F) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8197f, _fw_nic);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == config_fw_ap_wowlan)
-			READ_FIRMWARE(8197f, _fw_ap);
-#endif
-	}
-#endif
-
-#if ((DM_ODM_SUPPORT_TYPE == ODM_WIN))
-#if (RTL8821C_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8821C) {
-		if (config_type == CONFIG_FW_NIC)
-			READ_FIRMWARE_MP(8821c, _fw_nic);
-		else if (config_type == CONFIG_FW_WOWLAN)
-			READ_FIRMWARE_MP(8821c, _fw_wowlan);
-#ifdef CONFIG_AP_WOWLAN
-		else if (config_type == config_fw_ap_wowlan)
-			READ_FIRMWARE_MP(8821c, _fw_ap);
-#endif /*CONFIG_AP_WOWLAN*/
-	}
-#endif
-#endif
 
 #endif/* (DM_ODM_SUPPORT_TYPE != ODM_AP) */
 	return HAL_STATUS_SUCCESS;
@@ -2694,61 +2063,12 @@ odm_get_hw_img_version(
 	if (p_dm_odm->support_ic_type == ODM_RTL8821)
 		version = GET_VERSION_MP(8821a, _mac_reg);
 #endif
-#if (RTL8192E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8192E)
-		version = GET_VERSION_MP(8192e, _mac_reg);
-#endif
 #if (RTL8812A_SUPPORT == 1)
 	if (p_dm_odm->support_ic_type == ODM_RTL8812)
 		version = GET_VERSION_MP(8812a, _mac_reg);
 #endif
-#if (RTL8723D_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723D)
-		version = GET_VERSION_MP(8723d, _mac_reg);
-#endif
-/* JJ ADD 20161014 */
-#if (RTL8710B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8710B)
-		version = GET_VERSION_MP(8710b, _mac_reg);
-#endif
 
 #endif /* (DM_ODM_SUPPORT_TYPE != ODM_AP) */
-
-	/*1 All platforms support*/
-#if (RTL8188E_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188E)
-		version = GET_VERSION_MP(8188e, _mac_reg);
-#endif
-#if (RTL8723B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8723B)
-		version = GET_VERSION_MP(8723b, _mac_reg);
-#endif
-#if (RTL8814A_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8814A)
-		version = GET_VERSION_MP(8814a, _mac_reg);
-#endif
-#if (RTL8703B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8703B)
-		version = GET_VERSION_MP(8703b, _mac_reg);
-#endif
-#if (RTL8188F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8188F)
-		version = GET_VERSION_MP(8188f, _mac_reg);
-#endif
-#if (RTL8822B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8822B)
-		version = GET_VERSION_MP(8822b, _mac_reg);
-#endif
-
-#if (RTL8197F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8197F)
-		version = GET_VERSION_MP(8197f, _mac_reg);
-#endif
-
-#if (RTL8821C_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type == ODM_RTL8821C)
-		version = GET_VERSION(8821c, _mac_reg);
-#endif
 
 	return version;
 }

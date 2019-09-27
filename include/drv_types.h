@@ -1360,10 +1360,8 @@ int rtw_suspend_free_assoc_resource(_adapter *padapter);
 #endif
 
 /* HCI Related header file */
-#ifdef CONFIG_USB_HCI
 	#include <usb_osintf.h>
 	#include <usb_ops.h>
 	#include <usb_hal.h>
-#endif
 
 #endif /* __DRV_TYPES_H__ */

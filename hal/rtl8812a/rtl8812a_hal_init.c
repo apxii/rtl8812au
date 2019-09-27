@@ -213,9 +213,7 @@ _BlockWrite_8812(
 	u8			*bufferPtr	= (u8 *)buffer;
 	u32			i = 0, offset = 0;
 
-#ifdef CONFIG_USB_HCI
 	blockSize_p1 = MAX_REG_BOLCK_SIZE;
-#endif
 
 	/* 3 Phase #1 */
 	blockCount_p1 = buffSize / blockSize_p1;
@@ -224,11 +222,7 @@ _BlockWrite_8812(
 
 
 	for (i = 0; i < blockCount_p1; i++) {
-#ifdef CONFIG_USB_HCI
 		ret = rtw_writeN(padapter, (FW_START_ADDRESS + i * blockSize_p1), blockSize_p1, (bufferPtr + i * blockSize_p1));
-#else
-		ret = rtw_write32(padapter, (FW_START_ADDRESS + i * blockSize_p1), le32_to_cpu(*((u32 *)(bufferPtr + i * blockSize_p1))));
-#endif
 
 		if (ret == _FAIL)
 			goto exit;
@@ -241,16 +235,12 @@ _BlockWrite_8812(
 		blockCount_p2 = remainSize_p1 / blockSize_p2;
 		remainSize_p2 = remainSize_p1 % blockSize_p2;
 
-
-
-#ifdef CONFIG_USB_HCI
 		for (i = 0; i < blockCount_p2; i++) {
 			ret = rtw_writeN(padapter, (FW_START_ADDRESS + offset + i * blockSize_p2), blockSize_p2, (bufferPtr + offset + i * blockSize_p2));
 
 			if (ret == _FAIL)
 				goto exit;
 		}
-#endif
 	}
 
 	/* 3 Phase #3 */
@@ -1200,12 +1190,10 @@ void Hal_ReadRemoteWakeup_8812A(
 	} else {
 		/* decide hw if support remote wakeup function */
 		/* if hw supported, 8051 (SIE) will generate WeakUP signal( D+/D- toggle) when autoresume */
-#ifdef CONFIG_USB_HCI
 		if (IS_HARDWARE_TYPE_8821U(padapter))
 			pwrctl->bSupportRemoteWakeup = (hwinfo[EEPROM_USB_OPTIONAL_FUNCTION0_8811AU] & BIT1) ? _TRUE : _FALSE;
 		else
 			pwrctl->bSupportRemoteWakeup = (hwinfo[EEPROM_USB_OPTIONAL_FUNCTION0] & BIT1) ? _TRUE : _FALSE;
-#endif /* CONFIG_USB_HCI */
 
 		RTW_INFO("%s...bSupportRemoteWakeup(%x)\n", __FUNCTION__, pwrctl->bSupportRemoteWakeup);
 	}

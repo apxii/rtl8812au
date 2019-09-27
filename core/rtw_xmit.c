@@ -22,11 +22,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#if defined(PLATFORM_LINUX) && defined (PLATFORM_WINDOWS)
-	#error "Shall be Linux or Windows, but not both!\n"
-#endif
-
-
 static u8 P802_1H_OUI[P80211_OUI_LEN] = { 0x00, 0x00, 0xf8 };
 static u8 RFC1042_OUI[P80211_OUI_LEN] = { 0x00, 0x00, 0x00 };
 
@@ -291,7 +286,6 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 	for (i = 0; i < 4; i++)
 		pxmitpriv->wmm_para_seq[i] = i;
 
-#ifdef CONFIG_USB_HCI
 	pxmitpriv->txirp_cnt = 1;
 
 	_rtw_init_sema(&(pxmitpriv->tx_retevt), 0);
@@ -301,8 +295,6 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 	pxmitpriv->bkq_cnt = 0;
 	pxmitpriv->viq_cnt = 0;
 	pxmitpriv->voq_cnt = 0;
-#endif
-
 
 #ifdef CONFIG_XMIT_ACK
 	pxmitpriv->ack_tx = _FALSE;
@@ -3012,7 +3004,6 @@ static void rtw_init_xmitframe(struct xmit_frame *pxframe)
 
 		pxframe->frame_tag = DATA_FRAMETAG;
 
-#ifdef CONFIG_USB_HCI
 		pxframe->pkt = NULL;
 #ifdef USB_PACKET_OFFSET_SZ
 		pxframe->pkt_offset = (PACKET_OFFSET_SZ / 8);
@@ -3023,8 +3014,6 @@ static void rtw_init_xmitframe(struct xmit_frame *pxframe)
 #ifdef CONFIG_USB_TX_AGGREGATION
 		pxframe->agg_num = 1;
 #endif
-
-#endif /* #ifdef CONFIG_USB_HCI */
 
 #ifdef CONFIG_XMIT_ACK
 		pxframe->ack_report = 0;
@@ -3239,33 +3228,10 @@ static struct xmit_frame *dequeue_one_xmitframe(struct xmit_priv *pxmitpriv, str
 
 	while ((rtw_end_of_queue_search(xmitframe_phead, xmitframe_plist)) == _FALSE) {
 		pxmitframe = LIST_CONTAINOR(xmitframe_plist, struct xmit_frame, list);
-
-		/* xmitframe_plist = get_next(xmitframe_plist); */
-
-		/*#ifdef RTK_DMP_PLATFORM
-		#ifdef CONFIG_USB_TX_AGGREGATION
-				if((ptxservq->qcnt>0) && (ptxservq->qcnt<=2))
-				{
-					pxmitframe = NULL;
-
-					tasklet_schedule(&pxmitpriv->xmit_tasklet);
-
-					break;
-				}
-		#endif
-		#endif*/
 		rtw_list_delete(&pxmitframe->list);
-
 		ptxservq->qcnt--;
 
-		/* rtw_list_insert_tail(&pxmitframe->list, &phwxmit->pending); */
-
-		/* ptxservq->qcnt--; */
-
 		break;
-
-		/* pxmitframe = NULL; */
-
 	}
 
 	return pxmitframe;
@@ -3301,10 +3267,6 @@ static struct xmit_frame *rtw_get_xframe(struct xmit_priv *pxmitpriv, int *num_f
 	_adapter *padapter = pxmitpriv->adapter;
 	struct registry_priv	*pregpriv = &padapter->registrypriv;
 	int i, inx[4];
-
-#ifdef CONFIG_USB_HCI
-	/*	int j, tmp, acirp_cnt[4]; */
-#endif
 
 	inx[0] = 0;
 	inx[1] = 1;
@@ -3360,10 +3322,6 @@ struct xmit_frame *rtw_dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmi
 	_adapter *padapter = pxmitpriv->adapter;
 	struct registry_priv	*pregpriv = &padapter->registrypriv;
 	int i, inx[4];
-#ifdef CONFIG_USB_HCI
-	/*	int j, tmp, acirp_cnt[4]; */
-#endif
-
 
 	inx[0] = 0;
 	inx[1] = 1;
@@ -4798,9 +4756,7 @@ static struct xmit_buf *dequeue_pending_xmitbuf_under_survey(
 {
 	_irqL irql;
 	struct xmit_buf *pxmitbuf;
-#ifdef CONFIG_USB_HCI
 	struct xmit_frame *pxmitframe;
-#endif
 	_queue *pqueue;
 
 
@@ -4822,15 +4778,11 @@ static struct xmit_buf *dequeue_pending_xmitbuf_under_survey(
 
 			pxmitbuf = LIST_CONTAINOR(plist, struct xmit_buf, list);
 
-#ifdef CONFIG_USB_HCI
 			pxmitframe = (struct xmit_frame *)pxmitbuf->priv_data;
 			if (pxmitframe)
 				type = get_frame_sub_type(pxmitbuf->pbuf + TXDESC_SIZE + pxmitframe->pkt_offset * PACKET_OFFSET_SZ);
 			else
 				RTW_INFO("%s, !!!ERROR!!! For USB, TODO ITEM\n", __FUNCTION__);
-#else
-			type = get_frame_sub_type(pxmitbuf->pbuf + TXDESC_OFFSET);
-#endif
 
 			if ((type == WIFI_PROBEREQ) ||
 			    (type == WIFI_DATA_NULL) ||
@@ -5208,9 +5160,7 @@ void rtw_sctx_init(struct submit_ctx *sctx, int timeout_ms)
 {
 	sctx->timeout_ms = timeout_ms;
 	sctx->submit_time = rtw_get_current_time();
-#ifdef PLATFORM_LINUX /* TODO: add condition wating interface for other os */
 	init_completion(&sctx->done);
-#endif
 	sctx->status = RTW_SCTX_SUBMITTED;
 }
 
@@ -5220,7 +5170,6 @@ int rtw_sctx_wait(struct submit_ctx *sctx, const char *msg)
 	unsigned long expire;
 	int status = 0;
 
-#ifdef PLATFORM_LINUX
 	expire = sctx->timeout_ms ? msecs_to_jiffies(sctx->timeout_ms) : MAX_SCHEDULE_TIMEOUT;
 	if (!wait_for_completion_timeout(&sctx->done, expire)) {
 		/* timeout, do something?? */
@@ -5228,7 +5177,6 @@ int rtw_sctx_wait(struct submit_ctx *sctx, const char *msg)
 		RTW_INFO("%s timeout: %s\n", __func__, msg);
 	} else
 		status = sctx->status;
-#endif
 
 	if (status == RTW_SCTX_DONE_SUCCESS)
 		ret = _SUCCESS;
@@ -5257,9 +5205,7 @@ void rtw_sctx_done_err(struct submit_ctx **sctx, int status)
 		if (rtw_sctx_chk_waring_status(status))
 			RTW_INFO("%s status:%d\n", __func__, status);
 		(*sctx)->status = status;
-#ifdef PLATFORM_LINUX
 		complete(&((*sctx)->done));
-#endif
 		*sctx = NULL;
 	}
 }

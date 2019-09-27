@@ -177,22 +177,12 @@ static void request_wps_pbc_event(_adapter *padapter)
 #ifdef CONFIG_SUPPORT_HW_WPS_PBC
 void rtw_request_wps_pbc_event(_adapter *padapter)
 {
-#ifdef RTK_DMP_PLATFORM
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 12))
-	kobject_uevent(&padapter->pnetdev->dev.kobj, KOBJ_NET_PBC);
-#else
-	kobject_hotplug(&padapter->pnetdev->class_dev.kobj, KOBJ_NET_PBC);
-#endif
-#else
-
 	if (padapter->pid[0] == 0) {
 		/*	0 is the default value and it means the application monitors the HW PBC doesn't privde its pid to driver. */
 		return;
 	}
 
 	rtw_signal_process(padapter->pid[0], SIGUSR1);
-
-#endif
 
 	rtw_led_control(padapter, LED_CTL_START_WPS_BOTTON);
 }
@@ -6048,9 +6038,7 @@ static int rtw_dbg_port(struct net_device *dev,
 				pxmitpriv->free_xmitbuf_cnt, pxmitpriv->free_xmitframe_cnt,
 				pxmitpriv->free_xmit_extbuf_cnt, pxmitpriv->free_xframe_ext_cnt,
 				 precvpriv->free_recvframe_cnt);
-#ifdef CONFIG_USB_HCI
 			RTW_INFO("rx_urb_pending_cn=%d\n", ATOMIC_READ(&(precvpriv->rx_pending_cnt)));
-#endif
 		}
 			break;
 		case 0x09: {
@@ -7764,10 +7752,8 @@ static int rtw_wowlan_ctrl(struct net_device *dev,
 		rtw_suspend_common(padapter);
 
 	else if (_rtw_memcmp(extra, "disable", 7)) {
-#ifdef CONFIG_USB_HCI
 		RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
 		RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
-#endif
 		rtw_resume_common(padapter);
 
 #ifdef CONFIG_PNO_SUPPORT
@@ -7898,10 +7884,8 @@ static int rtw_ap_wowlan_ctrl(struct net_device *dev,
 
 		rtw_suspend_common(padapter);
 	} else if (_rtw_memcmp(extra, "disable", 7)) {
-#ifdef CONFIG_USB_HCI
 		RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
 		RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
-#endif
 		rtw_resume_common(padapter);
 	} else {
 		RTW_INFO("[%s] Invalid Parameter.\n", __func__);
@@ -11790,13 +11774,7 @@ static struct iw_statistics *rtw_get_wireless_stats(struct net_device *dev)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14))
 	piwstats->qual.updated = IW_QUAL_ALL_UPDATED ;/* |IW_QUAL_DBM; */
 #else
-#ifdef RTK_DMP_PLATFORM
-	/* IW_QUAL_DBM= 0x8, if driver use this flag, wireless extension will show value of dbm. */
-	/* remove this flag for show percentage 0~100 */
-	piwstats->qual.updated = 0x07;
-#else
 	piwstats->qual.updated = 0x0f;
-#endif
 #endif
 
 #ifdef CONFIG_SIGNAL_DISPLAY_DBM

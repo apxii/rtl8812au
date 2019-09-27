@@ -319,7 +319,6 @@ void rtw_hal_clear_interrupt(_adapter *padapter)
 }
 #endif
 
-#if defined(CONFIG_USB_HCI)
 u32	rtw_hal_inirp_init(_adapter *padapter)
 {
 	if (is_primary_adapter(padapter))
@@ -334,7 +333,6 @@ u32	rtw_hal_inirp_deinit(_adapter *padapter)
 
 	return _SUCCESS;
 }
-#endif /* #if defined(CONFIG_USB_HCI) */
 
 /* for USB Auto-suspend */
 u8	rtw_hal_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)
@@ -560,7 +558,7 @@ void rtw_hal_write_rfreg(_adapter *padapter, u32 eRFPath, u32 RegAddr, u32 BitMa
 	}
 }
 
-#if defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT)
+#if defined(CONFIG_SUPPORT_USB_INT)
 void	rtw_hal_interrupt_handler(_adapter *padapter, u16 pkt_len, u8 *pbuf)
 {
 	padapter->hal_func.interrupt_handler(padapter, pkt_len, pbuf);
@@ -1083,7 +1081,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		ret = _FAIL;
 	}
 #endif
-#if defined(CONFIG_USB_HCI)
 	if (NULL == padapter->hal_func.inirp_init) {
 		rtw_hal_error_msg("inirp_init");
 		ret = _FAIL;
@@ -1092,16 +1089,14 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		rtw_hal_error_msg("inirp_deinit");
 		ret = _FAIL;
 	}
-#endif /* #if defined(CONFIG_USB_HCI) */
-
 
 	/*** interrupt hdl section ***/
-#if (defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT))
+#if defined(CONFIG_SUPPORT_USB_INT)
 	if (NULL == padapter->hal_func.interrupt_handler) {
 		rtw_hal_error_msg("interrupt_handler");
 		ret = _FAIL;
 	}
-#endif /*#if (defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT))*/
+#endif /*#if defined(CONFIG_SUPPORT_USB_INT)*/
 
 	/*** DM section ***/
 	if (NULL == padapter->hal_func.dm_init) {

@@ -548,7 +548,6 @@ PHY_GetTxPowerIndex_8812A(
 	base_idx = PHY_GetTxPowerIndexBase(pAdapter, RFPath, Rate, BandWidth, Channel, &bIn24G);
 
 	by_rate_diff = PHY_GetTxPowerByRate(pAdapter, (u8)(!bIn24G), RFPath, tx_num, Rate);
-#ifdef CONFIG_USB_HCI
 	/* no external power, so disable power by rate in VHT to avoid card disable */
 #ifndef CONFIG_USE_EXTERNAL_POWER
 	/*	2013/01/29 MH For preventing VHT rate of 8812AU to be used in USB 2.0 mode	*/
@@ -566,7 +565,6 @@ PHY_GetTxPowerIndex_8812A(
 			(Rate >= MGN_VHT2SS_MCS0 && Rate <= MGN_VHT2SS_MCS7))
 			by_rate_diff = 0;
 	}
-#endif
 #endif
 
 	limit = PHY_GetTxPowerLimit(pAdapter, pAdapter->registrypriv.RegPwrTblSel, (u8)(!bIn24G), pHalData->current_channel_bw, RFPath, Rate, pHalData->current_channel);

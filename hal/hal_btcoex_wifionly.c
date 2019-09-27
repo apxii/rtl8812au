@@ -109,11 +109,7 @@ void hal_btcoex_wifionly_initlizevariables(PADAPTER padapter)
 
 	pwifionlycfg->Adapter = padapter;
 
-#if defined(CONFIG_USB_HCI)
 	pwifionlycfg->chip_interface = WIFIONLY_INTF_USB;
-#else
-	pwifionlycfg->chip_interface = WIFIONLY_INTF_UNKNOWN;
-#endif
 
 	pwifionly_haldata->customer_id = CUSTOMER_NORMAL;
 	pwifionly_haldata->efuse_pg_antnum = pHalData->EEPROMBluetoothAntNum;

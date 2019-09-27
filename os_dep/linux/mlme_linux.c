@@ -24,50 +24,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#ifdef RTK_DMP_PLATFORM
-void Linkup_workitem_callback(struct work_struct *work)
-{
-	struct mlme_priv *pmlmepriv = container_of(work, struct mlme_priv, Linkup_workitem);
-	_adapter *padapter = container_of(pmlmepriv, _adapter, mlmepriv);
-
-
-
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 12))
-	kobject_uevent(&padapter->pnetdev->dev.kobj, KOBJ_LINKUP);
-#else
-	kobject_hotplug(&padapter->pnetdev->class_dev.kobj, KOBJ_LINKUP);
-#endif
-
-}
-
-void Linkdown_workitem_callback(struct work_struct *work)
-{
-	struct mlme_priv *pmlmepriv = container_of(work, struct mlme_priv, Linkdown_workitem);
-	_adapter *padapter = container_of(pmlmepriv, _adapter, mlmepriv);
-
-
-
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 12))
-	kobject_uevent(&padapter->pnetdev->dev.kobj, KOBJ_LINKDOWN);
-#else
-	kobject_hotplug(&padapter->pnetdev->class_dev.kobj, KOBJ_LINKDOWN);
-#endif
-
-}
-#endif
-
-
-/*
-void sitesurvey_ctrl_handler(void *FunctionContext)
-{
-	_adapter *adapter = (_adapter *)FunctionContext;
-
-	_sitesurvey_ctrl_handler(adapter);
-
-	_set_timer(&adapter->mlmepriv.sitesurveyctrl.sitesurvey_ctrl_timer, 3000);
-}
-*/
-
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void rtw_join_timeout_handler(void *FunctionContext)
 #else
@@ -173,12 +129,6 @@ void rtw_init_mlme_timer(_adapter *padapter)
 	timer_setup(&pmlmepriv->set_scan_deny_timer, _rtw_set_scan_deny_timer_hdl, 0);
 #endif
 #endif
-
-#ifdef RTK_DMP_PLATFORM
-	_init_workitem(&(pmlmepriv->Linkup_workitem), Linkup_workitem_callback, padapter);
-	_init_workitem(&(pmlmepriv->Linkdown_workitem), Linkdown_workitem_callback, padapter);
-#endif
-
 }
 
 void rtw_os_indicate_connect(_adapter *adapter)
@@ -198,12 +148,6 @@ void rtw_os_indicate_connect(_adapter *adapter)
 
 	if (adapter->pid[2] != 0)
 		rtw_signal_process(adapter->pid[2], SIGALRM);
-
-#ifdef RTK_DMP_PLATFORM
-	_set_workitem(&adapter->mlmepriv.Linkup_workitem);
-#endif
-
-
 }
 
 void rtw_os_indicate_scan_done(_adapter *padapter, bool aborted)
@@ -291,9 +235,6 @@ void rtw_os_indicate_disconnect(_adapter *adapter,  u16 reason, u8 locally_gener
 
 	rtw_indicate_wx_disassoc_event(adapter);
 
-#ifdef RTK_DMP_PLATFORM
-	_set_workitem(&adapter->mlmepriv.Linkdown_workitem);
-#endif
 	/* modify for CONFIG_IEEE80211W, none 11w also can use the same command */
 	rtw_reset_securitypriv_cmd(adapter);
 

@@ -59,7 +59,6 @@ static void dm_CheckPbcGPIO(_adapter *padapter)
 	if (!padapter->registrypriv.hw_wps_pbc)
 		return;
 
-#if defined(CONFIG_USB_HCI)
 	if (IS_HARDWARE_TYPE_8812(padapter)) {
 		tmp1byte = rtw_read8(padapter, GPIO_IO_SEL);
 		tmp1byte |= (HAL_8812A_HW_GPIO_WPS_BIT);
@@ -100,7 +99,6 @@ static void dm_CheckPbcGPIO(_adapter *padapter)
 		if (tmp1byte & BIT4)
 			bPbcPressed = _TRUE;
 	}
-#endif
 
 	if (_TRUE == bPbcPressed) {
 		/* Here we only set bPbcPressed to true */
@@ -223,9 +221,7 @@ rtl8812_InitHalDm(
 	struct PHY_DM_STRUCT		*pDM_Odm = &(pHalData->odmpriv);
 	u8	i;
 
-#ifdef CONFIG_USB_HCI
 	dm_InitGPIOSetting(Adapter);
-#endif
 
 	pHalData->DM_Type = dm_type_by_driver;
 

@@ -298,16 +298,14 @@ struct hal_ops {
 #ifdef CONFIG_RECV_THREAD_MODE
 	s32 (*recv_hdl)(_adapter *adapter);
 #endif
-#if defined(CONFIG_USB_HCI)
 	u32(*inirp_init)(_adapter *padapter);
 	u32(*inirp_deinit)(_adapter *padapter);
-#endif
 	/*** interrupt hdl section ***/
 	void	(*enable_interrupt)(_adapter *padapter);
 	void	(*disable_interrupt)(_adapter *padapter);
 	u8(*check_ips_status)(_adapter *padapter);
 
-#if defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT)
+#if defined(CONFIG_SUPPORT_USB_INT)
 	void	(*interrupt_handler)(_adapter *padapter, u16 pkt_len, u8 *pbuf);
 #endif
 
@@ -604,10 +602,8 @@ void rtw_hal_disable_interrupt(_adapter *padapter);
 
 u8 rtw_hal_check_ips_status(_adapter *padapter);
 
-#if defined(CONFIG_USB_HCI)
-	u32	rtw_hal_inirp_init(_adapter *padapter);
-	u32	rtw_hal_inirp_deinit(_adapter *padapter);
-#endif
+u32	rtw_hal_inirp_init(_adapter *padapter);
+u32	rtw_hal_inirp_deinit(_adapter *padapter);
 
 u8	rtw_hal_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val);
 
@@ -644,7 +640,7 @@ void	rtw_hal_write_rfreg(_adapter *padapter, u32 eRFPath, u32 RegAddr, u32 BitMa
 #define phy_query_mac_reg phy_query_bb_reg
 
 
-#if  defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT)
+#if OQdefined(CONFIG_SUPPORT_USB_INT)
 	void	rtw_hal_interrupt_handler(_adapter *padapter, u16 pkt_len, u8 *pbuf);
 #endif
 

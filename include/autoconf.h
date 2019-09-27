@@ -29,13 +29,6 @@
 #define RTL871X_MODULE_NAME "8821AU"
 #define DRV_NAME "rtl8821au"
 
-
-#define CONFIG_USB_HCI
-
-
-#define PLATFORM_LINUX
-
-
 /* #define CONFIG_IOCTL_CFG80211 1 */
 
 #ifdef CONFIG_IOCTL_CFG80211

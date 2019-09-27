@@ -170,9 +170,7 @@ enum rt_spinlock_type {
 
 #elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
 	#include <drv_types.h>
-	#ifdef CONFIG_USB_HCI
-		#define DEV_BUS_TYPE	RT_USB_INTERFACE
-	#endif
+	#define DEV_BUS_TYPE	RT_USB_INTERFACE
 
 	#define	boolean	bool
 

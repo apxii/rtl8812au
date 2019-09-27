@@ -30,7 +30,6 @@ c. provides the software interface between caller and the hardware interface
 
 Compiler Flag Option:
 
-2. CONFIG_USB_HCI:
    a. USE_ASYNC_IRP: Both sync/async operations are provided.
 
 Only sync read/rtw_write_mem operations are provided.
@@ -44,14 +43,10 @@ jackson@realtek.com.tw
 #include <drv_types.h>
 #include <hal_data.h>
 
-#if defined(PLATFORM_LINUX) && defined (PLATFORM_WINDOWS)
-	#error "Shall be Linux or Windows, but not both!\n"
-#endif
-
-	#define rtw_le16_to_cpu(val)		le16_to_cpu(val)
-	#define rtw_le32_to_cpu(val)		le32_to_cpu(val)
-	#define rtw_cpu_to_le16(val)		cpu_to_le16(val)
-	#define rtw_cpu_to_le32(val)		cpu_to_le32(val)
+#define rtw_le16_to_cpu(val)		le16_to_cpu(val)
+#define rtw_le32_to_cpu(val)		le32_to_cpu(val)
+#define rtw_cpu_to_le16(val)		cpu_to_le16(val)
+#define rtw_cpu_to_le32(val)		cpu_to_le32(val)
 
 
 u8 _rtw_read8(_adapter *adapter, u32 addr)
