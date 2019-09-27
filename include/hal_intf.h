@@ -640,7 +640,7 @@ void	rtw_hal_write_rfreg(_adapter *padapter, u32 eRFPath, u32 RegAddr, u32 BitMa
 #define phy_query_mac_reg phy_query_bb_reg
 
 
-#if OQdefined(CONFIG_SUPPORT_USB_INT)
+#if defined(CONFIG_SUPPORT_USB_INT)
 	void	rtw_hal_interrupt_handler(_adapter *padapter, u16 pkt_len, u8 *pbuf);
 #endif
 
