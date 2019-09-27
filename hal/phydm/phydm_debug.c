@@ -1166,12 +1166,6 @@ void phydm_basic_profile(
 	PHYDM_SNPRINTF((output + used, out_len - used, "%-35s\n", "% Basic Profile %"));
 
 	if (p_dm_odm->support_ic_type == ODM_RTL8188E) {
-#if (RTL8188E_SUPPORT == 1)
-		ic_type = "RTL8188E";
-		date = RELEASE_DATE_8188E;
-		commit_by = COMMIT_BY_8188E;
-		release_ver = RELEASE_VERSION_8188E;
-#endif
 	}
 #if (RTL8812A_SUPPORT == 1)
 	else if (p_dm_odm->support_ic_type == ODM_RTL8812) {
@@ -1187,106 +1181,6 @@ void phydm_basic_profile(
 		date = RELEASE_DATE_8821A;
 		commit_by = COMMIT_BY_8821A;
 		release_ver = RELEASE_VERSION_8821A;
-	}
-#endif
-#if (RTL8192E_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8192E) {
-		ic_type = "RTL8192E";
-		date = RELEASE_DATE_8192E;
-		commit_by = COMMIT_BY_8192E;
-		release_ver = RELEASE_VERSION_8192E;
-	}
-#endif
-#if (RTL8723B_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8723B) {
-		ic_type = "RTL8723B";
-		date = RELEASE_DATE_8723B;
-		commit_by = COMMIT_BY_8723B;
-		release_ver = RELEASE_VERSION_8723B;
-	}
-#endif
-#if (RTL8814A_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8814A) {
-		ic_type = "RTL8814A";
-		date = RELEASE_DATE_8814A;
-		commit_by = COMMIT_BY_8814A;
-		release_ver = RELEASE_VERSION_8814A;
-	}
-#endif
-#if (RTL8881A_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8881A) {
-		ic_type = "RTL8881A";
-		/**/
-	}
-#endif
-#if (RTL8822B_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8822B) {
-		ic_type = "RTL8822B";
-		date = RELEASE_DATE_8822B;
-		commit_by = COMMIT_BY_8822B;
-		release_ver = RELEASE_VERSION_8822B;
-	}
-#endif
-#if (RTL8197F_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8197F) {
-		ic_type = "RTL8197F";
-		date = RELEASE_DATE_8197F;
-		commit_by = COMMIT_BY_8197F;
-		release_ver = RELEASE_VERSION_8197F;
-	}
-#endif
-
-#if (RTL8703B_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8703B) {
-
-		ic_type = "RTL8703B";
-		date = RELEASE_DATE_8703B;
-		commit_by = COMMIT_BY_8703B;
-		release_ver = RELEASE_VERSION_8703B;
-
-	}
-#endif
-#if (RTL8195A_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8195A) {
-		ic_type = "RTL8195A";
-		/**/
-	}
-#endif
-#if (RTL8188F_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8188F) {
-		ic_type = "RTL8188F";
-		date = RELEASE_DATE_8188F;
-		commit_by = COMMIT_BY_8188F;
-		release_ver = RELEASE_VERSION_8188F;
-	}
-#endif
-#if (RTL8723D_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8723D) {
-		ic_type = "RTL8723D";
-		date = RELEASE_DATE_8723D;
-		commit_by = COMMIT_BY_8723D;
-		release_ver = RELEASE_VERSION_8723D;
-		/**/
-	}
-#endif
-
-/* JJ ADD 20161014 */
-#if (RTL8710B_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8710B) {
-		ic_type = "RTL8710B";
-		date = RELEASE_DATE_8710B;
-		commit_by = COMMIT_BY_8710B;
-		release_ver = RELEASE_VERSION_8710B;
-		/**/
-	}
-#endif
-
-#if (RTL8821C_SUPPORT == 1)
-	else if (p_dm_odm->support_ic_type == ODM_RTL8821C) {
-		ic_type = "RTL8821C";
-		date = RELEASE_DATE_8821C;
-		commit_by = COMMIT_BY_8821C;
-		release_ver = RELEASE_VERSION_8821C;
 	}
 #endif
 	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s (MP Chip: %s)\n", "IC type", ic_type, p_dm_odm->is_mp_chip ? "Yes" : "No"));
@@ -1348,17 +1242,7 @@ void phydm_basic_profile(
 	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "EDCA Turbo", EDCATURBO_VERSION));
 #endif
 	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "path Diversity", PATHDIV_VERSION));
-	PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "Dynamic RX path", DYNAMIC_RX_PATH_VERSION));
 
-#if (RTL8822B_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type & ODM_RTL8822B)
-		PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "PHY config 8822B", PHY_CONFIG_VERSION_8822B));
-
-#endif
-#if (RTL8197F_SUPPORT == 1)
-	if (p_dm_odm->support_ic_type & ODM_RTL8197F)
-		PHYDM_SNPRINTF((output + used, out_len - used, "  %-35s: %s\n", "PHY config 8197F", PHY_CONFIG_VERSION_8197F));
-#endif
 	*_used = used;
 	*_out_len = out_len;
 #endif /*#if CONFIG_PHYDM_DEBUG_FUNCTION*/
