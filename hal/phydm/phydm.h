@@ -44,7 +44,6 @@
 #include "phydm_ccx.h"
 #include "txbf/phydm_hal_txbf_api.h"
 
-#include "phydm_dynamic_rx_path.h"
 #include "phydm_psd.h"
 
 
@@ -844,14 +843,6 @@ enum phy_reg_pg_type {
 	struct _CCX_INFO						dm_ccx_info;
 #if (CONFIG_PSD_TOOL == 1)
 	struct	_PHYDM_PSD_				dm_psd_table;
-#endif
-	
-#if (CONFIG_DYNAMIC_RX_PATH == 1)
-	struct _DYNAMIC_RX_PATH_			dm_drp_table;
-#endif
-
-#if (RTL8814A_SUPPORT == 1 || RTL8822B_SUPPORT == 1 || RTL8821C_SUPPORT == 1)
-	struct _IQK_INFORMATION	IQK_info;
 #endif
 
 #if (DM_ODM_SUPPORT_TYPE & ODM_WIN)

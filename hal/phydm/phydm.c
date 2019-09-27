@@ -1149,9 +1149,6 @@ odm_dm_init(
 #endif
 	
 	odm_antenna_diversity_init(p_dm_odm);
-#if (CONFIG_DYNAMIC_RX_PATH == 1)
-	phydm_dynamic_rx_path_init(p_dm_odm);
-#endif
 	odm_auto_channel_select_init(p_dm_odm);
 	odm_path_diversity_init(p_dm_odm);
 	odm_dynamic_tx_power_init(p_dm_odm);
@@ -1306,9 +1303,6 @@ phydm_watchdog_mp(
 	struct PHY_DM_STRUCT		*p_dm_odm
 )
 {
-#if (CONFIG_DYNAMIC_RX_PATH == 1)
-	phydm_dynamic_rx_path_caller(p_dm_odm);
-#endif
 }
 /*
  * 2011/09/20 MH This is the entry pointer for all team to execute HW out source DM.
@@ -1360,9 +1354,6 @@ odm_dm_watchdog(
 	odm_cfo_tracking(p_dm_odm);
 	odm_dynamic_tx_power(p_dm_odm);
 	odm_antenna_diversity(p_dm_odm);
-#if (CONFIG_DYNAMIC_RX_PATH == 1)
-	phydm_dynamic_rx_path(p_dm_odm);
-#endif
 
 #if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
 	phydm_beamforming_watchdog(p_dm_odm);
@@ -1990,14 +1981,6 @@ odm_init_all_work_items(struct PHY_DM_STRUCT	*p_dm_odm)
 	struct _ADAPTER		*p_adapter = p_dm_odm->adapter;
 #if USE_WORKITEM
 
-#if CONFIG_DYNAMIC_RX_PATH
-	odm_initialize_work_item(p_dm_odm,
-			 &p_dm_odm->dm_drp_table.phydm_dynamic_rx_path_workitem,
-		 (RT_WORKITEM_CALL_BACK)phydm_dynamic_rx_path_workitem_callback,
-				 (void *)p_adapter,
-				 "DynamicRxPathWorkitem");
-
-#endif
 #ifdef CONFIG_S0S1_SW_ANTENNA_DIVERSITY
 	odm_initialize_work_item(p_dm_odm,
 		 &p_dm_odm->dm_swat_table.phydm_sw_antenna_switch_workitem,
@@ -2140,11 +2123,6 @@ odm_free_all_work_items(struct PHY_DM_STRUCT	*p_dm_odm)
 	odm_free_work_item(&(p_dm_odm->dm_swat_table.phydm_sw_antenna_switch_workitem));
 #endif
 
-#if CONFIG_DYNAMIC_RX_PATH
-	odm_free_work_item(&(p_dm_odm->dm_drp_table.phydm_dynamic_rx_path_workitem));
-#endif
-
-
 
 #if (defined(CONFIG_HL_SMART_ANTENNA_TYPE1)) || (defined(CONFIG_HL_SMART_ANTENNA_TYPE2))
 	odm_free_work_item(&(p_dm_odm->dm_sat_table.hl_smart_antenna_workitem));
@@ -2183,10 +2161,6 @@ void odm_init_all_timers(struct PHY_DM_STRUCT *p_dm_odm)
 	odm_ant_div_timers(p_dm_odm, INIT_ANTDIV_TIMMER);
 #endif
 
-#if (CONFIG_DYNAMIC_RX_PATH == 1)
-	phydm_dynamic_rx_path_timers(p_dm_odm, INIT_DRP_TIMMER);
-#endif
-
 #if (BEAMFORMING_SUPPORT == 1)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	odm_initialize_timer(p_dm_odm, &p_dm_odm->beamforming_info.beamforming_timer,
@@ -2212,10 +2186,6 @@ odm_cancel_all_timers(
 
 #if (defined(CONFIG_PHYDM_ANTENNA_DIVERSITY))
 	odm_ant_div_timers(p_dm_odm, CANCEL_ANTDIV_TIMMER);
-#endif
-
-#if (CONFIG_DYNAMIC_RX_PATH == 1)
-	phydm_dynamic_rx_path_timers(p_dm_odm, CANCEL_DRP_TIMMER);
 #endif
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_AP)
@@ -2253,10 +2223,6 @@ odm_release_all_timers(
 {
 #if (defined(CONFIG_PHYDM_ANTENNA_DIVERSITY))
 	odm_ant_div_timers(p_dm_odm, RELEASE_ANTDIV_TIMMER);
-#endif
-
-#if (CONFIG_DYNAMIC_RX_PATH == 1)
-	phydm_dynamic_rx_path_timers(p_dm_odm, RELEASE_DRP_TIMMER);
 #endif
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_AP)

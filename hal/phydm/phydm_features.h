@@ -54,11 +54,6 @@
 	#define	PHYDM_DC_CANCELLATION			0
 	#endif
 
-	#if (RTL8822B_SUPPORT == 1)
-		#define	CONFIG_DYNAMIC_RX_PATH	0
-	#else
-		#define	CONFIG_DYNAMIC_RX_PATH	0
-	#endif
 	#define PHYDM_SUPPORT_EDCA		0
 	#define SUPPORTABLITY_PHYDMLIZE	1
 	#define RA_MASK_PHYDMLIZE_WIN	1
@@ -79,12 +74,6 @@
 		#define CONFIG_PHYDM_DEBUG_FUNCTION		0
 	#else
 		#define CONFIG_PHYDM_DEBUG_FUNCTION		1
-	#endif
-
-	#if (RTL8822B_SUPPORT == 1)
-		#define	CONFIG_DYNAMIC_RX_PATH	0
-	#else
-		#define	CONFIG_DYNAMIC_RX_PATH	0
 	#endif
 
 	#define PHYDM_SUPPORT_EDCA		1
@@ -141,12 +130,6 @@
 	#define	CONFIG_PSD_TOOL					1
 	/*phydm debyg report & tools*/
 	#define CONFIG_PHYDM_DEBUG_FUNCTION		1
-
-	#if (RTL8822B_SUPPORT == 1)
-		#define	CONFIG_DYNAMIC_RX_PATH	0
-	#else
-		#define	CONFIG_DYNAMIC_RX_PATH	0
-	#endif
 
 	#define PHYDM_SUPPORT_EDCA		1
 	#define SUPPORTABLITY_PHYDMLIZE	1

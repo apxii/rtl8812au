@@ -234,20 +234,6 @@ struct recv_stat {
 
 #define EOR BIT(30)
 
-struct rtw_rx_ring {
-#ifdef CONFIG_TRX_BD_ARCH
-	struct rx_buf_desc	*buf_desc;
-#else
-	struct recv_stat	*desc;
-#endif
-	dma_addr_t		dma;
-	unsigned int		idx;
-	struct sk_buff	*rx_buf[PCI_MAX_RX_COUNT];
-};
-#endif
-
-
-
 /*
 accesser of recv_priv: rtw_recv_entry(dispatch / passive level); recv_thread(passive) ; returnpkt(dispatch)
 ; halt(passive) ;
