@@ -756,7 +756,7 @@ void	_rtw_mutex_free(_mutex *pmutex)
 {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
 	mutex_destroy(pmutex);
-#else
+#endif
 }
 
 void	_rtw_spinlock_init(_lock *plock)
