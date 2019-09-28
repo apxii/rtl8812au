@@ -1241,13 +1241,6 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 					    || _SUCCESS != rtw_sitesurvey_cmd(adapter, &pmlmepriv->assoc_ssid, 1, NULL, 0)
 					   ) {
 						rtw_set_to_roam(adapter, 0);
-#ifdef CONFIG_INTEL_WIDI
-						if (adapter->mlmepriv.widi_state == INTEL_WIDI_STATE_ROAMING) {
-							_rtw_memset(pmlmepriv->sa_ext, 0x00, L2SDTA_SERVICE_VE_LEN);
-							intel_widi_wk_cmd(adapter, INTEL_WIDI_LISTEN_WK, NULL, 0);
-							RTW_INFO("change to widi listen\n");
-						}
-#endif /* CONFIG_INTEL_WIDI */
 						rtw_free_assoc_resources(adapter, 1);
 						rtw_indicate_disconnect(adapter, 0, _FALSE);
 					} else
@@ -1288,10 +1281,6 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 #endif /* CONFIG_P2P_PS */
 
 	rtw_mi_os_xmit_schedule(adapter);
-
-#ifdef CONFIG_DRVEXT_MODULE_WSC
-	drvext_surveydone_callback(&adapter->drvextpriv);
-#endif
 
 #ifdef DBG_CONFIG_ERROR_DETECT
 	{
@@ -1475,11 +1464,6 @@ void rtw_indicate_connect(_adapter *padapter)
 		rtw_led_control(padapter, LED_CTL_LINK);
 
 
-#ifdef CONFIG_DRVEXT_MODULE
-		if (padapter->drvextpriv.enable_wpa)
-			indicate_l2_connect(padapter);
-		else
-#endif
 		{
 			rtw_os_indicate_connect(padapter);
 		}
@@ -1487,13 +1471,6 @@ void rtw_indicate_connect(_adapter *padapter)
 	}
 
 	rtw_set_to_roam(padapter, 0);
-#ifdef CONFIG_INTEL_WIDI
-	if (padapter->mlmepriv.widi_state == INTEL_WIDI_STATE_ROAMING) {
-		_rtw_memset(pmlmepriv->sa_ext, 0x00, L2SDTA_SERVICE_VE_LEN);
-		intel_widi_wk_cmd(padapter, INTEL_WIDI_LISTEN_WK, NULL, 0);
-		RTW_INFO("change to widi listen\n");
-	}
-#endif /* CONFIG_INTEL_WIDI */
 	if (!check_fwstate(&padapter->mlmepriv, WIFI_AP_STATE))
 		rtw_mi_set_scan_deny(padapter, 3000);
 
@@ -2442,10 +2419,6 @@ void rtw_stadel_event_callback(_adapter *adapter, u8 *pbuf)
 			roam = _TRUE;
 			roam_target = pmlmepriv->roam_network;
 		}
-#ifdef CONFIG_INTEL_WIDI
-		else if (adapter->mlmepriv.widi_state == INTEL_WIDI_STATE_CONNECTED)
-			roam = _TRUE;
-#endif /* CONFIG_INTEL_WIDI */
 
 		if (roam == _TRUE) {
 			if (rtw_to_roam(adapter) > 0)
@@ -2471,10 +2444,6 @@ void rtw_stadel_event_callback(_adapter *adapter, u8 *pbuf)
 		_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
 
 		rtw_indicate_disconnect(adapter, *(u16 *)pstadel->rsvd, pstadel->locally_generated);
-#ifdef CONFIG_INTEL_WIDI
-		if (!rtw_to_roam(adapter))
-			process_intel_widi_disconnect(adapter, 1);
-#endif /* CONFIG_INTEL_WIDI */
 
 		_rtw_roaming(adapter, roam_target);
 	}
@@ -2584,13 +2553,6 @@ void _rtw_join_timeout_handler(_adapter *adapter)
 				}
 				break;
 			} else {
-#ifdef CONFIG_INTEL_WIDI
-				if (adapter->mlmepriv.widi_state == INTEL_WIDI_STATE_ROAMING) {
-					_rtw_memset(pmlmepriv->sa_ext, 0x00, L2SDTA_SERVICE_VE_LEN);
-					intel_widi_wk_cmd(adapter, INTEL_WIDI_LISTEN_WK, NULL, 0);
-					RTW_INFO("change to widi listen\n");
-				}
-#endif /* CONFIG_INTEL_WIDI */
 				RTW_INFO("%s We've try roaming but fail\n", __FUNCTION__);
 #ifdef CONFIG_RTW_80211R
 				rtw_clr_ft_flags(adapter, RTW_FT_SUPPORTED|RTW_FT_OVER_DS_SUPPORTED);
@@ -2615,12 +2577,6 @@ void _rtw_join_timeout_handler(_adapter *adapter)
 	}
 
 	_exit_critical_bh(&pmlmepriv->lock, &irqL);
-
-
-#ifdef CONFIG_DRVEXT_MODULE_WSC
-	drvext_assoc_fail_indicate(&adapter->drvextpriv);
-#endif
-
 
 
 }
@@ -3569,9 +3525,6 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len)
 		ielength += psecuritypriv->supplicant_ie[1] + 2;
 		rtw_report_sec_ie(adapter, authmode, psecuritypriv->supplicant_ie);
 
-#ifdef CONFIG_DRVEXT_MODULE
-		drvext_report_sec_ie(&adapter->drvextpriv, authmode, sec_ie);
-#endif
 	}
 
 	iEntry = SecIsInPMKIDList(adapter, pmlmepriv->assoc_bssid);

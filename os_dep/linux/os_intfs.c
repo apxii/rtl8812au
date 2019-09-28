@@ -202,11 +202,7 @@ module_param(rtw_rf_config, int, 0644);
 static int rtw_check_hw_status = 0;
 
 static int rtw_low_power = 0;
-#ifdef CONFIG_WIFI_TEST
-	static int rtw_wifi_spec = 1;/* for wifi test */
-#else
-	static int rtw_wifi_spec = 0;
-#endif
+static int rtw_wifi_spec = 0;
 
 #ifdef CONFIG_DEFAULT_PATTERNS_EN
 	static bool	rtw_support_default_patterns = _TRUE;
@@ -576,25 +572,6 @@ module_param_array(rtw_target_tx_pwr_5g_d, int, &rtw_target_tx_pwr_5g_d_num, 064
 MODULE_PARM_DESC(rtw_target_tx_pwr_5g_d, "5G target tx power (unit:dBm) of RF path D for each rate section, should match the real calibrate power, -1: undefined");
 #endif /* CONFIG_IEEE80211_BAND_5GHZ */
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-char *rtw_phy_file_path = REALTEK_CONFIG_PATH;
-module_param(rtw_phy_file_path, charp, 0644);
-MODULE_PARM_DESC(rtw_phy_file_path, "The path of phy parameter");
-/* PHY FILE Bit Map
-* BIT0 - MAC,				0: non-support, 1: support
-* BIT1 - BB,					0: non-support, 1: support
-* BIT2 - BB_PG,				0: non-support, 1: support
-* BIT3 - BB_MP,				0: non-support, 1: support
-* BIT4 - RF,					0: non-support, 1: support
-* BIT5 - RF_TXPWR_TRACK,	0: non-support, 1: support
-* BIT6 - RF_TXPWR_LMT,		0: non-support, 1: support */
-static int rtw_load_phy_file = (BIT2 | BIT6);
-module_param(rtw_load_phy_file, int, 0644);
-MODULE_PARM_DESC(rtw_load_phy_file, "PHY File Bit Map");
-static int rtw_decrypt_phy_file = 0;
-module_param(rtw_decrypt_phy_file, int, 0644);
-MODULE_PARM_DESC(rtw_decrypt_phy_file, "Enable Decrypt PHY File");
-#endif
 
 int _netdev_open(struct net_device *pnetdev);
 int netdev_open(struct net_device *pnetdev);
@@ -874,9 +851,6 @@ uint loadparam(_adapter *padapter)
 
 #ifdef CONFIG_LAYER2_ROAMING
 	registry_par->max_roaming_times = (u8)rtw_max_roaming_times;
-#ifdef CONFIG_INTEL_WIDI
-	registry_par->max_roaming_times = (u8)rtw_max_roaming_times + 2;
-#endif /* CONFIG_INTEL_WIDI */
 #endif
 
 #ifdef CONFIG_IOL
@@ -919,10 +893,6 @@ uint loadparam(_adapter *padapter)
 	registry_par->AmplifierType_2G = (u8)rtw_amplifier_type_2g;
 	registry_par->AmplifierType_5G = (u8)rtw_amplifier_type_5g;
 	registry_par->GLNA_Type = (u8)rtw_GLNA_type;
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-	registry_par->load_phy_file = (u8)rtw_load_phy_file;
-	registry_par->RegDecryptCustomFile = (u8)rtw_decrypt_phy_file;
-#endif
 	registry_par->qos_opt_enable = (u8)rtw_qos_opt_enable;
 
 	registry_par->hiq_filter = (u8)rtw_hiq_filter;
@@ -2071,14 +2041,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 	rtw_hal_sreset_init(padapter);
 #endif
 
-#ifdef CONFIG_INTEL_WIDI
-	if (rtw_init_intel_widi(padapter) == _FAIL) {
-		RTW_INFO("Can't rtw_init_intel_widi\n");
-		ret8 = _FAIL;
-		goto exit;
-	}
-#endif /* CONFIG_INTEL_WIDI */
-
 #ifdef CONFIG_BR_EXT
 	_rtw_spinlock_init(&padapter->br_ext_lock);
 #endif /* CONFIG_BR_EXT */
@@ -2178,10 +2140,6 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 	_rtw_spinlock_free(&padapter->br_ext_lock);
 #endif /* CONFIG_BR_EXT */
 
-#ifdef CONFIG_INTEL_WIDI
-	rtw_free_intel_widi(padapter);
-#endif /* CONFIG_INTEL_WIDI */
-
 	free_mlme_ext_priv(&padapter->mlmeextpriv);
 
 #ifdef CONFIG_TDLS
@@ -2205,10 +2163,6 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 	rtw_free_pwrctrl_priv(padapter);
 
 	/* rtw_mfree((void *)padapter, sizeof (padapter)); */
-
-#ifdef CONFIG_DRVEXT_MODULE
-	free_drvext(&padapter->drvextpriv);
-#endif
 
 	rtw_hal_free_data(padapter);
 
@@ -2751,9 +2705,6 @@ int _netdev_open(struct net_device *pnetdev)
 		}
 #endif
 
-#ifdef CONFIG_DRVEXT_MODULE
-		init_drvext(padapter);
-#endif
 		rtw_intf_start(padapter);
 
 #ifdef CONFIG_IOCTL_CFG80211
@@ -4263,22 +4214,3 @@ EXPORT_SYMBOL(rtw_disable_gpio_interrupt);
 
 #endif /* #ifdef CONFIG_GPIO_API */
 
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-
-int rtw_vendor_ie_get_api(struct net_device *dev, int ie_num, char *extra,
-		u16 extra_len)
-{
-	int ret = 0;
-
-	ret = rtw_vendor_ie_get_raw_data(dev, ie_num, extra, extra_len);
-	return ret;
-}
-EXPORT_SYMBOL(rtw_vendor_ie_get_api);
-
-int rtw_vendor_ie_set_api(struct net_device *dev, char *extra)
-{
-	return rtw_vendor_ie_set(dev, NULL, NULL, extra);
-}
-EXPORT_SYMBOL(rtw_vendor_ie_set_api);
-
-#endif

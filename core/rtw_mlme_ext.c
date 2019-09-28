@@ -5700,9 +5700,6 @@ void issue_probersp_p2p(_adapter *padapter, unsigned char *da)
 #ifdef CONFIG_WFD
 	u32					wfdielen = 0;
 #endif
-#ifdef CONFIG_INTEL_WIDI
-	u8 zero_array_check[L2SDTA_SERVICE_VE_LEN] = { 0x00 };
-#endif /* CONFIG_INTEL_WIDI */
 
 	/* RTW_INFO("%s\n", __FUNCTION__); */
 
@@ -5809,39 +5806,6 @@ void issue_probersp_p2p(_adapter *padapter, unsigned char *da)
 
 		/*	Value: */
 		wpsie[wpsielen++] = WPS_VERSION_1;	/*	Version 1.0 */
-
-#ifdef CONFIG_INTEL_WIDI
-		/*	Commented by Kurt */
-		/*	Appended WiDi info. only if we did issued_probereq_widi(), and then we saved ven. ext. in pmlmepriv->sa_ext. */
-		if (_rtw_memcmp(pmlmepriv->sa_ext, zero_array_check, L2SDTA_SERVICE_VE_LEN) == _FALSE
-		    || pmlmepriv->num_p2p_sdt != 0) {
-			/* Sec dev type */
-			*(__be16 *)(wpsie + wpsielen) = cpu_to_be16(WPS_ATTR_SEC_DEV_TYPE_LIST);
-			wpsielen += 2;
-
-			/*	Length: */
-			*(__be16 *)(wpsie + wpsielen) = cpu_to_be16(0x0008);
-			wpsielen += 2;
-
-			/*	Value: */
-			/*	Category ID */
-			*(__be16 *)(wpsie + wpsielen) = cpu_to_be16(WPS_PDT_CID_DISPLAYS);
-			wpsielen += 2;
-
-			/*	OUI */
-			*(__be32 *)(wpsie + wpsielen) = cpu_to_be32(INTEL_DEV_TYPE_OUI);
-			wpsielen += 4;
-
-			*(__be16 *)(wpsie + wpsielen) = cpu_to_be16(WPS_PDT_SCID_WIDI_CONSUMER_SINK);
-			wpsielen += 2;
-
-			if (_rtw_memcmp(pmlmepriv->sa_ext, zero_array_check, L2SDTA_SERVICE_VE_LEN) == _FALSE) {
-				/*	Vendor Extension */
-				_rtw_memcpy(wpsie + wpsielen, pmlmepriv->sa_ext, L2SDTA_SERVICE_VE_LEN);
-				wpsielen += L2SDTA_SERVICE_VE_LEN;
-			}
-		}
-#endif /* CONFIG_INTEL_WIDI */
 
 		/*	WiFi Simple Config State */
 		/*	Type: */
@@ -6472,13 +6436,6 @@ static unsigned int on_action_public_p2p(union recv_frame *precv_frame)
 
 			result = process_p2p_group_negotation_req(pwdinfo, frame_body, len);
 			issue_p2p_GO_response(padapter, get_addr2_ptr(pframe), frame_body, len, result);
-#ifdef CONFIG_INTEL_WIDI
-			if (padapter->mlmepriv.widi_state == INTEL_WIDI_STATE_LISTEN) {
-				padapter->mlmepriv.widi_state = INTEL_WIDI_STATE_WFD_CONNECTION;
-				_cancel_timer_ex(&(padapter->mlmepriv.listen_timer));
-				intel_widi_wk_cmd(padapter, INTEL_WIDI_LISTEN_STOP_WK, NULL, 0);
-			}
-#endif /* CONFIG_INTEL_WIDI */
 
 			/*	Commented by Albert 20110718 */
 			/*	No matter negotiating or negotiation failure, the driver should set up the restore P2P state timer. */
@@ -6630,10 +6587,6 @@ static unsigned int on_action_public_p2p(union recv_frame *precv_frame)
 									}
 								} else {
 									rtw_p2p_set_state(pwdinfo, P2P_STATE_RECV_INVITE_REQ_DISMATCH);
-#ifdef CONFIG_INTEL_WIDI
-									_rtw_memcpy(pwdinfo->p2p_peer_device_addr, group_id.go_device_addr , ETH_ALEN);
-									rtw_p2p_set_role(pwdinfo, P2P_ROLE_CLIENT);
-#endif /* CONFIG_INTEL_WIDI */
 
 									status_code = P2P_STATUS_FAIL_UNKNOWN_P2PGROUP;
 								}
@@ -6680,13 +6633,6 @@ static unsigned int on_action_public_p2p(union recv_frame *precv_frame)
 				issue_p2p_invitation_response(padapter, get_addr2_ptr(pframe), pwdinfo->inviteresp_info.token, status_code);
 				_set_timer(&pwdinfo->restore_p2p_state_timer, 3000);
 			}
-#ifdef CONFIG_INTEL_WIDI
-			if (padapter->mlmepriv.widi_state == INTEL_WIDI_STATE_LISTEN) {
-				padapter->mlmepriv.widi_state = INTEL_WIDI_STATE_WFD_CONNECTION;
-				_cancel_timer_ex(&(padapter->mlmepriv.listen_timer));
-				intel_widi_wk_cmd(padapter, INTEL_WIDI_LISTEN_STOP_WK, NULL, 0);
-			}
-#endif /* CONFIG_INTEL_WIDI */
 			break;
 		}
 		case P2P_INVIT_RESP: {
@@ -6751,13 +6697,6 @@ static unsigned int on_action_public_p2p(union recv_frame *precv_frame)
 
 			rtw_p2p_set_state(pwdinfo, P2P_STATE_RX_PROVISION_DIS_REQ);
 			_set_timer(&pwdinfo->restore_p2p_state_timer, P2P_PROVISION_TIMEOUT);
-#ifdef CONFIG_INTEL_WIDI
-			if (padapter->mlmepriv.widi_state == INTEL_WIDI_STATE_LISTEN) {
-				padapter->mlmepriv.widi_state = INTEL_WIDI_STATE_WFD_CONNECTION;
-				_cancel_timer_ex(&(padapter->mlmepriv.listen_timer));
-				intel_widi_wk_cmd(padapter, INTEL_WIDI_LISTEN_STOP_WK, NULL, 0);
-			}
-#endif /* CONFIG_INTEL_WIDI */
 			break;
 
 		case P2P_PROVISION_DISC_RESP:
@@ -7513,25 +7452,6 @@ static int update_hidden_ssid(u8 *ies, u32 ies_len, u8 hidden_ssid_mode)
 	return len_diff;
 }
 
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-u32 rtw_build_vendor_ie(_adapter *padapter , unsigned char *pframe , u8 mgmt_frame_tyte)
-{
-	int vendor_ie_num = 0;
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	u32 len = 0;
-
-	for (vendor_ie_num = 0 ; vendor_ie_num < WLAN_MAX_VENDOR_IE_NUM ; vendor_ie_num++) {
-		if (pmlmepriv->vendor_ielen[vendor_ie_num] > 0 && pmlmepriv->vendor_ie_mask[vendor_ie_num] & mgmt_frame_tyte) {
-			_rtw_memcpy(pframe , pmlmepriv->vendor_ie[vendor_ie_num] , pmlmepriv->vendor_ielen[vendor_ie_num]);
-			pframe +=  pmlmepriv->vendor_ielen[vendor_ie_num];
-			len += pmlmepriv->vendor_ielen[vendor_ie_num];
-		}
-	}
-
-	return len;
-}
-#endif
-
 void issue_beacon(_adapter *padapter, int timeout_ms)
 {
 	struct xmit_frame	*pmgntframe;
@@ -7754,9 +7674,6 @@ void issue_beacon(_adapter *padapter, int timeout_ms)
 		}
 #endif /* CONFIG_P2P */
 
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-		pattrib->pktlen += rtw_build_vendor_ie(padapter , pframe , WIFI_BEACON_VENDOR_IE_BIT);
-#endif
 		goto _issue_bcn;
 
 	}
@@ -7975,9 +7892,6 @@ void issue_probersp(_adapter *padapter, unsigned char *da, u8 is_valid_p2p_probe
 				pattrib->pktlen += ssid_ielen_diff;
 			}
 		}
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-		pattrib->pktlen += rtw_build_vendor_ie(padapter , pframe , WIFI_PROBERESP_VENDOR_IE_BIT);
-#endif
 	} else
 #endif
 	{
@@ -8189,9 +8103,6 @@ static int _issue_probereq(_adapter *padapter, NDIS_802_11_SSID *pssid, u8 *da, 
 			/* pmlmepriv->wps_probe_req_ie_len = 0 ; */ /* reset to zero */
 		}
 	}
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-	pattrib->pktlen += rtw_build_vendor_ie(padapter , pframe , WIFI_PROBEREQ_VENDOR_IE_BIT);
-#endif
 
 	pattrib->last_txcmdsz = pattrib->pktlen;
 
@@ -8647,9 +8558,6 @@ void issue_asocrsp(_adapter *padapter, unsigned short status, struct sta_info *p
 #endif
 
 #endif /* CONFIG_P2P */
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-	pattrib->pktlen += rtw_build_vendor_ie(padapter , pframe , WIFI_ASSOCRESP_VENDOR_IE_BIT);
-#endif
 	pattrib->last_txcmdsz = pattrib->pktlen;
 
 	dump_mgntframe(padapter, pmgntframe);
@@ -9067,9 +8975,6 @@ void _issue_assocreq(_adapter *padapter, u8 is_reassoc)
 	wfdielen = rtw_append_assoc_req_wfd_ie(padapter, pframe);
 	pframe += wfdielen;
 	pattrib->pktlen += wfdielen;
-#endif
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-	pattrib->pktlen += rtw_build_vendor_ie(padapter , pframe , WIFI_ASSOCREQ_VENDOR_IE_BIT);
 #endif
 #ifdef CONFIG_RTW_80211R
 	if (rtw_chk_ft_flags(padapter, RTW_FT_SUPPORTED)) {
@@ -10703,12 +10608,6 @@ u8 collect_bss_info(_adapter *padapter, union recv_frame *precv_frame, WLAN_BSSI
 #endif /* CONFIG_80211N_HT */
 
 	}
-
-#ifdef CONFIG_INTEL_WIDI
-	/* process_intel_widi_query_or_tigger(padapter, bssid); */
-	if (process_intel_widi_query_or_tigger(padapter, bssid))
-		return _FAIL;
-#endif /* CONFIG_INTEL_WIDI */
 
 #if defined(DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) & 1
 	if (strcmp(bssid->Ssid.Ssid, DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) == 0) {

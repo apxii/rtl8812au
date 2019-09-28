@@ -1492,10 +1492,6 @@ static ssize_t proc_set_tx_power_ext_info(struct file *file, const char __user *
 		if (num < 1)
 			return count;
 
-		#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-		phy_free_filebuf_mask(adapter, LOAD_BB_PG_PARA_FILE | LOAD_RF_TXPWR_LMT_PARA_FILE);
-		#endif
-
 		rtw_ps_deny(adapter, PS_DENY_IOCTL);
 		LeaveAllPowerSaveModeDirect(adapter);
 

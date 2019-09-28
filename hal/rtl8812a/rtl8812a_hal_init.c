@@ -1013,15 +1013,8 @@ Hal_EfuseParseBTCoexistInfo8812A(
 
 #ifdef CONFIG_BT_COEXIST
 	if (_TRUE == pHalData->EEPROMBluetoothCoexist && IS_HARDWARE_TYPE_8812(Adapter)) {
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-		if (!hal_btcoex_AntIsolationConfig_ParaFile(Adapter , PHY_FILE_WIFI_ANT_ISOLATION)) {
-#endif
-			pHalData->EEPROMBluetoothCoexist = _TRUE;
-			hal_btcoex_SetAntIsolationType(Adapter, 0);
-
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-		}
-#endif
+		pHalData->EEPROMBluetoothCoexist = _TRUE;
+		hal_btcoex_SetAntIsolationType(Adapter, 0);
 	}
 
 	if (regsty->ant_num != 0) {
@@ -3515,12 +3508,6 @@ void InitPGData8812A(PADAPTER padapter)
 		if (!is_boot_from_eeprom(padapter))
 			EFUSE_ShadowMapUpdate(padapter, EFUSE_WIFI, _FALSE);
 	}
-#ifdef CONFIG_EFUSE_CONFIG_FILE
-	if (check_phy_efuse_tx_power_info_valid(padapter) == _FALSE) {
-		if (Hal_readPGDataFromConfigFile(padapter) != _SUCCESS)
-			RTW_ERR("invalid phy efuse and read from file fail, will use driver default!!\n");
-	}
-#endif
 }
 
 static void read_chip_version_8812a(PADAPTER Adapter)

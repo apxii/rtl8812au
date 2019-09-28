@@ -93,9 +93,6 @@
 	#include <linux/earlysuspend.h>
 #endif /* CONFIG_HAS_EARLYSUSPEND */
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
-	#include <linux/fs.h>
-#endif
 
 	#include <linux/usb.h>
 	#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 21))

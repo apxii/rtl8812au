@@ -62,10 +62,6 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 	#include <rtw_vht.h>
 #endif
 
-#ifdef CONFIG_INTEL_WIDI
-	#include <rtw_intel_widi.h>
-#endif
-
 #include <rtw_cmd.h>
 #include <cmd_osdep.h>
 #include <rtw_security.h>
@@ -113,10 +109,6 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #ifdef CONFIG_TDLS
 	#include <rtw_tdls.h>
 #endif /* CONFIG_TDLS */
-
-#ifdef CONFIG_DRVEXT_MODULE
-	#include <drvext_api.h>
-#endif /* CONFIG_DRVEXT_MODULE */
 
 #ifdef CONFIG_MP_INCLUDED
 	#include <rtw_mp.h>
@@ -332,10 +324,6 @@ struct registry_priv {
 	u8  check_fw_ps;
 	u8	RegPwrTrimEnable;
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-	u8	load_phy_file;
-	u8	RegDecryptCustomFile;
-#endif
 #ifdef CONFIG_CONCURRENT_MODE
 	u8 virtual_iface_num;
 #endif
@@ -1057,10 +1045,6 @@ struct _ADAPTER {
 
 #ifdef CONFIG_MP_INCLUDED
 	struct	mp_priv	mppriv;
-#endif
-
-#ifdef CONFIG_DRVEXT_MODULE
-	struct	drvext_priv	drvextpriv;
 #endif
 
 #ifdef CONFIG_AP_MODE

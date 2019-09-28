@@ -3134,89 +3134,7 @@ typedef int (*iw_handler)(struct net_device *dev, struct iw_request_info *info,
 static  int rtw_drvext_hdl(struct net_device *dev, struct iw_request_info *info,
 			   union iwreq_data *wrqu, char *extra)
 {
-#ifdef CONFIG_DRVEXT_MODULE
-	u8 res;
-	struct drvext_handler *phandler;
-	struct drvext_oidparam *poidparam;
-	int ret;
-	u16 len;
-	u8 *pparmbuf, bset;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct iw_point *p = &wrqu->data;
-
-	if ((!p->length) || (!p->pointer)) {
-		ret = -EINVAL;
-		goto _rtw_drvext_hdl_exit;
-	}
-
-
-	bset = (u8)(p->flags & 0xFFFF);
-	len = p->length;
-	pparmbuf = (u8 *)rtw_malloc(len);
-	if (pparmbuf == NULL) {
-		ret = -ENOMEM;
-		goto _rtw_drvext_hdl_exit;
-	}
-
-	if (bset) { /* set info */
-		if (copy_from_user(pparmbuf, p->pointer, len)) {
-			rtw_mfree(pparmbuf, len);
-			ret = -EFAULT;
-			goto _rtw_drvext_hdl_exit;
-		}
-	} else { /* query info */
-
-	}
-
-
-	/*  */
-	poidparam = (struct drvext_oidparam *)pparmbuf;
-
-
-
-	/* check subcode	 */
-	if (poidparam->subcode >= MAX_DRVEXT_HANDLERS) {
-		ret = -EINVAL;
-		goto _rtw_drvext_hdl_exit;
-	}
-
-
-	if (poidparam->subcode >= MAX_DRVEXT_OID_SUBCODES) {
-		ret = -EINVAL;
-		goto _rtw_drvext_hdl_exit;
-	}
-
-
-	phandler = drvextoidhandlers + poidparam->subcode;
-
-	if (poidparam->len != phandler->parmsize) {
-		ret = -EINVAL;
-		goto _rtw_drvext_hdl_exit;
-	}
-
-
-	res = phandler->handler(&padapter->drvextpriv, bset, poidparam->data);
-
-	if (res == 0) {
-		ret = 0;
-
-		if (bset == 0x00) {/* query info */
-			/* _rtw_memcpy(p->pointer, pparmbuf, len); */
-			if (copy_to_user(p->pointer, pparmbuf, len))
-				ret = -EFAULT;
-		}
-	} else
-		ret = -EFAULT;
-
-
-_rtw_drvext_hdl_exit:
-
-	return ret;
-
-#endif
-
 	return 0;
-
 }
 
 static void rtw_dbg_mode_hdl(_adapter *padapter, u32 id, u8 *pdata, u32 len)
@@ -3584,10 +3502,6 @@ static int rtw_wps_start(struct net_device *dev,
 		rtw_led_control(padapter, LED_CTL_STOP_WPS);
 	else if (u32wps_start == 3)   /* WPS Stop because of wps fail */
 		rtw_led_control(padapter, LED_CTL_STOP_WPS_FAIL);
-
-#ifdef CONFIG_INTEL_WIDI
-	process_intel_widi_wps_status(padapter, u32wps_start);
-#endif /* CONFIG_INTEL_WIDI */
 
 exit:
 
@@ -4488,13 +4402,6 @@ static int rtw_p2p_connect(struct net_device *dev,
 		return ret;
 	}
 
-#ifdef CONFIG_INTEL_WIDI
-	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == _TRUE) {
-		RTW_INFO("[%s] WiFi is under survey!\n", __FUNCTION__);
-		return ret;
-	}
-#endif /* CONFIG_INTEL_WIDI	 */
-
 	if (pwdinfo->ui_got_wps_info == P2P_NO_WPSINFO)
 		return -1;
 
@@ -4577,19 +4484,6 @@ static int rtw_p2p_connect(struct net_device *dev,
 
 	} else {
 		RTW_INFO("[%s] Not Found in Scanning Queue~\n", __FUNCTION__);
-#ifdef CONFIG_INTEL_WIDI
-		_cancel_timer_ex(&pwdinfo->restore_p2p_state_timer);
-		rtw_p2p_set_state(pwdinfo, P2P_STATE_FIND_PHASE_SEARCH);
-		rtw_p2p_findphase_ex_set(pwdinfo, P2P_FINDPHASE_EX_NONE);
-		rtw_free_network_queue(padapter, _TRUE);
-		/**
-		 * For WiDi, if we can't find candidate device in scanning queue,
-		 * driver will do scanning itself
-		 */
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
-		rtw_sitesurvey_cmd(padapter, NULL, 0, NULL, 0);
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
-#endif /* CONFIG_INTEL_WIDI */
 		ret = -1;
 	}
 exit:
@@ -5158,13 +5052,6 @@ static int rtw_p2p_prov_disc(struct net_device *dev,
 		RTW_INFO("[%s] WiFi Direct is disable!\n", __FUNCTION__);
 		return ret;
 	} else {
-#ifdef CONFIG_INTEL_WIDI
-		if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY) == _TRUE) {
-			RTW_INFO("[%s] WiFi is under survey!\n", __FUNCTION__);
-			return ret;
-		}
-#endif /* CONFIG_INTEL_WIDI */
-
 		/*	Reset the content of struct tx_provdisc_req_info excluded the wps_config_method_request. */
 		_rtw_memset(pwdinfo->tx_prov_disc_info.peerDevAddr, 0x00, ETH_ALEN);
 		_rtw_memset(pwdinfo->tx_prov_disc_info.peerIFAddr, 0x00, ETH_ALEN);
@@ -5233,18 +5120,6 @@ static int rtw_p2p_prov_disc(struct net_device *dev,
 			}
 
 		}
-
-#ifdef CONFIG_INTEL_WIDI
-		/* Some Intel WiDi source may not provide P2P IE, */
-		/* so we could only compare mac addr by 802.11 Source Address */
-		if (pmlmepriv->widi_state == INTEL_WIDI_STATE_WFD_CONNECTION
-		    && uintPeerChannel == 0) {
-			if (_rtw_memcmp(pnetwork->network.MacAddress, peerMAC, ETH_ALEN)) {
-				uintPeerChannel = pnetwork->network.Configuration.DSConfig;
-				break;
-			}
-		}
-#endif /* CONFIG_INTEL_WIDI */
 
 		plist = get_next(plist);
 
@@ -5335,15 +5210,6 @@ static int rtw_p2p_prov_disc(struct net_device *dev,
 
 	} else {
 		RTW_INFO("[%s] NOT Found in the Scanning Queue!\n", __FUNCTION__);
-#ifdef CONFIG_INTEL_WIDI
-		_cancel_timer_ex(&pwdinfo->restore_p2p_state_timer);
-		rtw_p2p_set_state(pwdinfo, P2P_STATE_FIND_PHASE_SEARCH);
-		rtw_p2p_findphase_ex_set(pwdinfo, P2P_FINDPHASE_EX_NONE);
-		rtw_free_network_queue(padapter, _TRUE);
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
-		rtw_sitesurvey_cmd(padapter, NULL, 0, NULL, 0);
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
-#endif /* CONFIG_INTEL_WIDI */
 	}
 exit:
 
@@ -7925,198 +7791,6 @@ static int rtw_pm_set(struct net_device *dev,
 
 	return ret;
 }
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-
-int rtw_vendor_ie_get_raw_data(struct net_device *dev, u32 vendor_ie_num,
-							   char *extra, u32 length)
-{
-	int j;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	u32 vendor_ie_mask = 0;
-	char *pstring;
-
-	if (vendor_ie_num >= WLAN_MAX_VENDOR_IE_NUM) {
-		RTW_INFO("[%s] only support %d vendor ie\n", __func__ ,
-				 WLAN_MAX_VENDOR_IE_NUM);
-		return -EFAULT;
-	}
-
-	if (pmlmepriv->vendor_ielen[vendor_ie_num] == 0) {
-		RTW_INFO("[%s]  Fail, vendor_ie_num: %d is not set\n", __func__,
-				 vendor_ie_num);
-		return -EFAULT;
-	}
-
-	if (length < 2 * pmlmepriv->vendor_ielen[vendor_ie_num] + 5) {
-		RTW_INFO("[%s]  Fail, buffer size is too small\n", __func__);
-		return -EFAULT;
-	}
-
-	vendor_ie_mask = pmlmepriv->vendor_ie_mask[vendor_ie_num];
-	_rtw_memset(extra, 0, length);
-
-	pstring = extra;
-	pstring += sprintf(pstring, "%d,%x,", vendor_ie_num, vendor_ie_mask);
-
-	for (j = 0; j < pmlmepriv->vendor_ielen[vendor_ie_num]; j++)
-		pstring += sprintf(pstring, "%02x", pmlmepriv->vendor_ie[vendor_ie_num][j]);
-
-	length = pstring - extra;
-	return length;
-}
-
-int rtw_vendor_ie_get_data(struct net_device *dev, int vendor_ie_num, char *extra)
-{
-	int j;
-	char *pstring;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	u32 vendor_ie_mask = 0;
-	__u16 length = 0;
-
-	vendor_ie_mask = pmlmepriv->vendor_ie_mask[vendor_ie_num];
-	pstring = extra;
-	pstring += sprintf(pstring , "\nVendor IE num %d , Mask:%x " , vendor_ie_num , vendor_ie_mask);
-
-	if (vendor_ie_mask & WIFI_BEACON_VENDOR_IE_BIT)
-		pstring += sprintf(pstring , "[Beacon]");
-	if (vendor_ie_mask & WIFI_PROBEREQ_VENDOR_IE_BIT)
-		pstring += sprintf(pstring , "[Probe Req]");
-	if (vendor_ie_mask & WIFI_PROBERESP_VENDOR_IE_BIT)
-		pstring += sprintf(pstring , "[Probe Resp]");
-	if (vendor_ie_mask & WIFI_ASSOCREQ_VENDOR_IE_BIT)
-		pstring += sprintf(pstring , "[Assoc Req]");
-	if (vendor_ie_mask & WIFI_ASSOCRESP_VENDOR_IE_BIT)
-		pstring += sprintf(pstring , "[Assoc Resp]");
-
-	pstring += sprintf(pstring , "\nVendor IE:\n");
-	for (j = 0 ; j < pmlmepriv->vendor_ielen[vendor_ie_num]  ; j++)
-		pstring += sprintf(pstring , "%02x" , pmlmepriv->vendor_ie[vendor_ie_num][j]);
-
-	length = pstring - extra;
-	return length;
-
-}
-
-int rtw_vendor_ie_get(struct net_device *dev, struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
-{
-	int ret = 0, vendor_ie_num = 0, cmdlen;
-	struct iw_point *p;
-	u8 *ptmp;
-
-	p = &wrqu->data;
-	cmdlen = p->length;
-	if (0 == cmdlen)
-		return -EINVAL;
-
-	ptmp = (u8 *)rtw_malloc(cmdlen);
-	if (NULL == ptmp)
-		return -ENOMEM;
-
-	if (copy_from_user(ptmp, p->pointer, cmdlen)) {
-		ret = -EFAULT;
-		goto exit;
-	}
-	ret = sscanf(ptmp , "%d", &vendor_ie_num);
-	if (vendor_ie_num > WLAN_MAX_VENDOR_IE_NUM - 1) {
-		ret = -EFAULT;
-		goto exit;
-	}
-
-	wrqu->data.length = rtw_vendor_ie_get_data(dev, vendor_ie_num, extra);
-
-exit:
-	rtw_mfree(ptmp, cmdlen);
-
-	return 0;
-}
-
-int rtw_vendor_ie_set(struct net_device *dev, struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
-{
-	int ret = 0, i , len = 0 , totoal_ie_len = 0 , total_ie_len_byte = 0;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	u32 vendor_ie_mask = 0;
-	u32 vendor_ie_num = 0;
-	u32 id, elen;
-
-	ret = sscanf(extra, "%d,%x,%*s", &vendor_ie_num , &vendor_ie_mask);
-	if (strrchr(extra , ','))
-		extra = strrchr(extra , ',') + 1;
-	else
-		return -EINVAL;
-	totoal_ie_len = strlen(extra);
-	RTW_INFO("[%s] vendor_ie_num = %d , vendor_ie_mask = %x , vendor_ie = %s , len = %d\n", __func__ , vendor_ie_num , vendor_ie_mask , extra  , totoal_ie_len);
-
-	if (vendor_ie_num  > WLAN_MAX_VENDOR_IE_NUM - 1) {
-		RTW_INFO("[%s] only support %d vendor ie\n", __func__ , WLAN_MAX_VENDOR_IE_NUM);
-		return -EFAULT;
-	}
-
-	if (totoal_ie_len > WLAN_MAX_VENDOR_IE_LEN) {
-		RTW_INFO("[%s] Fail , not support ie length extend %d\n", __func__ , WLAN_MAX_VENDOR_IE_LEN);
-		return -EFAULT;
-	}
-
-	if (vendor_ie_mask == 0) {
-		RTW_INFO("[%s] Clear vendor_ie_num %d group\n", __func__ , vendor_ie_num);
-		goto _clear_path;
-	}
-
-	if (totoal_ie_len % 2 != 0) {
-		RTW_INFO("[%s]  Fail , IE length = %zu is odd\n" , __func__ , strlen(extra));
-		return -EFAULT;
-	}
-
-	if (totoal_ie_len > 0) {
-		for (i = 0  ; i < strlen(extra) ; i += 2) {
-			pmlmepriv->vendor_ie[vendor_ie_num][len] = key_2char2num(extra[i] , extra[i + 1]);
-			if (len == 0) {
-				id = pmlmepriv->vendor_ie[vendor_ie_num][len];
-				if (id != WLAN_EID_VENDOR_SPECIFIC) {
-					RTW_INFO("[%s] Fail , VENDOR SPECIFIC IE ID \"%x\" was not correct\n", __func__ , id);
-					goto _clear_path;
-				}
-			} else if (len == 1) {
-				total_ie_len_byte = (totoal_ie_len / 2) - 2;
-				elen = pmlmepriv->vendor_ie[vendor_ie_num][len];
-				if (elen != total_ie_len_byte) {
-					RTW_INFO("[%s] Fail , Input IE length = \"%d\"(hex:%x) bytes , not match input total IE context length \"%d\" bytes\n", __func__ , elen , elen ,
-						 total_ie_len_byte);
-					goto _clear_path;
-				}
-			}
-			len++;
-		}
-		pmlmepriv->vendor_ielen[vendor_ie_num] = len;
-	} else
-		pmlmepriv->vendor_ielen[vendor_ie_num] = 0;
-
-
-
-	if (vendor_ie_mask & WIFI_BEACON_VENDOR_IE_BIT)
-		RTW_INFO("[%s] Beacon append vendor ie\n", __func__);
-	if (vendor_ie_mask & WIFI_PROBEREQ_VENDOR_IE_BIT)
-		RTW_INFO("[%s] Probe Req append vendor ie\n", __func__);
-	if (vendor_ie_mask & WIFI_PROBERESP_VENDOR_IE_BIT)
-		RTW_INFO("[%s] Probe Resp  append vendor ie\n", __func__);
-	if (vendor_ie_mask & WIFI_ASSOCREQ_VENDOR_IE_BIT)
-		RTW_INFO("[%s] Assoc Req append vendor ie\n", __func__);
-	if (vendor_ie_mask & WIFI_ASSOCRESP_VENDOR_IE_BIT)
-		RTW_INFO("[%s] Assoc Resp append vendor ie\n", __func__);
-
-	pmlmepriv->vendor_ie_mask[vendor_ie_num] = vendor_ie_mask;
-
-	return ret;
-
-_clear_path:
-	_rtw_memset(pmlmepriv->vendor_ie[vendor_ie_num] , 0 , sizeof(u32) * WLAN_MAX_VENDOR_IE_LEN);
-	pmlmepriv->vendor_ielen[vendor_ie_num] = 0;
-	pmlmepriv->vendor_ie_mask[vendor_ie_num] = 0;
-	return -EFAULT;
-}
-#endif
 
 static int rtw_mp_efuse_get(struct net_device *dev,
 			    struct iw_request_info *info,
@@ -9826,12 +9500,6 @@ static int rtw_priv_set(struct net_device *dev,
 		rtw_ap_wowlan_ctrl(dev, info, wdata, extra);
 		break;
 #endif
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-	case VENDOR_IE_SET:
-		RTW_INFO("set case VENDOR_IE_SET\n");
-		rtw_vendor_ie_set(dev , info , wdata , extra);
-		break;
-#endif
 	default:
 		return -EIO;
 	}
@@ -9875,12 +9543,6 @@ static int rtw_priv_get(struct net_device *dev,
 	}
 
 	switch (subcmd) {
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-	case VENDOR_IE_GET:
-		RTW_INFO("get case VENDOR_IE_GET\n");
-		rtw_vendor_ie_get(dev , info , wdata , extra);
-		break;
-#endif
 	default:
 		return -EIO;
 	}
@@ -10775,46 +10437,6 @@ static int rtw_tdls_get(struct net_device *dev,
 	return ret;
 }
 
-
-
-
-
-#ifdef CONFIG_INTEL_WIDI
-static int rtw_widi_set(struct net_device *dev,
-			struct iw_request_info *info,
-			union iwreq_data *wrqu, char *extra)
-{
-	int ret = 0;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-
-	process_intel_widi_cmd(padapter, extra);
-
-	return ret;
-}
-
-static int rtw_widi_set_probe_request(struct net_device *dev,
-				      struct iw_request_info *info,
-				      union iwreq_data *wrqu, char *extra)
-{
-	int	ret = 0;
-	u8	*pbuf = NULL;
-	_adapter	*padapter = (_adapter *)rtw_netdev_priv(dev);
-
-	pbuf = rtw_malloc(sizeof(l2_msg_t));
-	if (pbuf) {
-		if (copy_from_user(pbuf, wrqu->data.pointer, wrqu->data.length))
-			ret = -EFAULT;
-		/* _rtw_memcpy(pbuf, wrqu->data.pointer, wrqu->data.length); */
-
-		if (wrqu->data.flags == 0)
-			intel_widi_wk_cmd(padapter, INTEL_WIDI_ISSUE_PROB_WK, pbuf, sizeof(l2_msg_t));
-		else if (wrqu->data.flags == 1)
-			rtw_set_wfd_rds_sink_info(padapter, (l2_msg_t *)pbuf);
-	}
-	return ret;
-}
-#endif /* CONFIG_INTEL_WIDI */
-
 #ifdef CONFIG_MAC_LOOPBACK_DRIVER
 
 static s32 initLoopback(PADAPTER padapter)
@@ -11595,25 +11217,10 @@ static const struct iw_priv_args rtw_private_args[] = {
 		IW_PRIV_TYPE_CHAR | 40, IW_PRIV_TYPE_CHAR | 0x7FF, "test"
 	},
 
-#ifdef CONFIG_INTEL_WIDI
-	{
-		SIOCIWFIRSTPRIV + 0x1E,
-		IW_PRIV_TYPE_CHAR | 1024, 0, "widi_set"
-	},
-	{
-		SIOCIWFIRSTPRIV + 0x1F,
-		IW_PRIV_TYPE_CHAR | 128, 0, "widi_prob_req"
-	},
-#endif /* CONFIG_INTEL_WIDI */
-
 	{ SIOCIWFIRSTPRIV + 0x0E, IW_PRIV_TYPE_CHAR | 1024, 0 , ""},  /* set  */
 	{ SIOCIWFIRSTPRIV + 0x0F, IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | IW_PRIV_SIZE_MASK , ""},/* get
  * --- sub-ioctls definitions --- */
 
-#ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
-	{ VENDOR_IE_SET, IW_PRIV_TYPE_CHAR | 1024 , 0 , "vendor_ie_set" },
-	{ VENDOR_IE_GET, IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | IW_PRIV_SIZE_MASK, "vendor_ie_get" },
-#endif
 #ifdef CONFIG_WOWLAN
 	{ MP_WOW_ENABLE , IW_PRIV_TYPE_CHAR | 1024, 0, "wow_mode" },
 	{ MP_WOW_SET_PATTERN , IW_PRIV_TYPE_CHAR | 1024, 0, "wow_set_pattern" },
@@ -11725,10 +11332,6 @@ static iw_handler rtw_private_handler[] = {
 #endif
 	NULL,							/* 0x1C is reserved for hostapd */
 	rtw_test,						/* 0x1D */
-#ifdef CONFIG_INTEL_WIDI
-	rtw_widi_set,					/* 0x1E */
-	rtw_widi_set_probe_request,		/* 0x1F */
-#endif /* CONFIG_INTEL_WIDI */
 };
 
 #if WIRELESS_EXT >= 17

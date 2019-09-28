@@ -81,20 +81,6 @@ void dump_drv_cfg(void *sel)
 	RTW_PRINT_SEL(sel, "CONFIG_POWER_SAVING\n");
 #endif
 
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-	RTW_PRINT_SEL(sel, "LOAD_PHY_PARA_FROM_FILE - REALTEK_CONFIG_PATH=%s\n", REALTEK_CONFIG_PATH);
-	#if defined(CONFIG_MULTIDRV) || defined(REALTEK_CONFIG_PATH_WITH_IC_NAME_FOLDER)
-	RTW_PRINT_SEL(sel, "LOAD_PHY_PARA_FROM_FILE - REALTEK_CONFIG_PATH_WITH_IC_NAME_FOLDER\n");
-	#endif
-
-/* configurations about TX power */
-#ifdef CONFIG_CALIBRATE_TX_POWER_BY_REGULATORY
-	RTW_PRINT_SEL(sel, "CONFIG_CALIBRATE_TX_POWER_BY_REGULATORY\n");
-#endif
-#ifdef CONFIG_CALIBRATE_TX_POWER_TO_MAX
-	RTW_PRINT_SEL(sel, "CONFIG_CALIBRATE_TX_POWER_TO_MAX\n");
-#endif
-#endif
 	RTW_PRINT_SEL(sel, "RTW_DEF_MODULE_REGULATORY_CERT=0x%02x\n", RTW_DEF_MODULE_REGULATORY_CERT);
 
 	RTW_PRINT_SEL(sel, "CONFIG_TXPWR_BY_RATE_EN=%d\n", CONFIG_TXPWR_BY_RATE_EN);
@@ -4249,19 +4235,9 @@ int proc_get_efuse_map(struct seq_file *m, void *v)
 	ips_mode = pwrctrlpriv->ips_mode;
 	rtw_pm_set_ips(padapter, IPS_NONE);
 
-	if (pHalData->efuse_file_status == EFUSE_FILE_LOADED) {
-		RTW_PRINT_SEL(m, "File eFuse Map loaded! file path:%s\nDriver eFuse Map From File\n", EFUSE_MAP_PATH);
-		if (pHalData->bautoload_fail_flag)
-			RTW_PRINT_SEL(m, "File Autoload fail!!!\n");
-	} else if (pHalData->efuse_file_status ==  EFUSE_FILE_FAILED) {
-		RTW_PRINT_SEL(m, "Open File eFuse Map Fail ! file path:%s\nDriver eFuse Map From Default\n", EFUSE_MAP_PATH);
-		if (pHalData->bautoload_fail_flag)
-			RTW_PRINT_SEL(m, "HW Autoload fail!!!\n");
-	} else {
-		RTW_PRINT_SEL(m, "Driver eFuse Map From HW\n");
-		if (pHalData->bautoload_fail_flag)
-			RTW_PRINT_SEL(m, "HW Autoload fail!!!\n");
-	}
+	RTW_PRINT_SEL(m, "Driver eFuse Map From HW\n");
+	if (pHalData->bautoload_fail_flag)
+		RTW_PRINT_SEL(m, "HW Autoload fail!!!\n");
 	for (i = 0; i < mapLen; i += 16) {
 		RTW_PRINT_SEL(m, "0x%02x\t", i);
 		for (j = 0; j < 8; j++)

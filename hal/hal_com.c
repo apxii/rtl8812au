@@ -101,11 +101,6 @@ void rtw_hal_read_sta_dk_key(_adapter *adapter, u8 key_id)
 }
 #endif
 
-
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-	char	rtw_phy_para_file_path[PATH_LENGTH_MAX];
-#endif
-
 void dump_chip_info(HAL_VERSION	ChipVersion)
 {
 	int cnt = 0;
@@ -4432,9 +4427,6 @@ static void rtw_hal_construct_P2PProbeRsp(_adapter *padapter, u8 *pframe, u32 *p
 #ifdef CONFIG_WFD
 	u32					wfdielen = 0;
 #endif
-#ifdef CONFIG_INTEL_WIDI
-	u8 zero_array_check[L2SDTA_SERVICE_VE_LEN] = { 0x00 };
-#endif /* CONFIG_INTEL_WIDI */
 
 	/* for debug */
 	u8 *dbgbuf = pframe;
@@ -4528,39 +4520,6 @@ static void rtw_hal_construct_P2PProbeRsp(_adapter *padapter, u8 *pframe, u32 *p
 
 		/*	Value: */
 		wpsie[wpsielen++] = WPS_VERSION_1;	/*	Version 1.0 */
-
-#ifdef CONFIG_INTEL_WIDI
-		/*	Commented by Kurt */
-		/*	Appended WiDi info. only if we did issued_probereq_widi(), and then we saved ven. ext. in pmlmepriv->sa_ext. */
-		if (_rtw_memcmp(pmlmepriv->sa_ext, zero_array_check, L2SDTA_SERVICE_VE_LEN) == _FALSE
-		    || pmlmepriv->num_p2p_sdt != 0) {
-			/* Sec dev type */
-			*(u16 *)(wpsie + wpsielen) = cpu_to_be16(WPS_ATTR_SEC_DEV_TYPE_LIST);
-			wpsielen += 2;
-
-			/*	Length: */
-			*(u16 *)(wpsie + wpsielen) = cpu_to_be16(0x0008);
-			wpsielen += 2;
-
-			/*	Value: */
-			/*	Category ID */
-			*(u16 *)(wpsie + wpsielen) = cpu_to_be16(WPS_PDT_CID_DISPLAYS);
-			wpsielen += 2;
-
-			/*	OUI */
-			*(u32 *)(wpsie + wpsielen) = cpu_to_be32(INTEL_DEV_TYPE_OUI);
-			wpsielen += 4;
-
-			*(u16 *)(wpsie + wpsielen) = cpu_to_be16(WPS_PDT_SCID_WIDI_CONSUMER_SINK);
-			wpsielen += 2;
-
-			if (_rtw_memcmp(pmlmepriv->sa_ext, zero_array_check, L2SDTA_SERVICE_VE_LEN) == _FALSE) {
-				/*	Vendor Extension */
-				_rtw_memcpy(wpsie + wpsielen, pmlmepriv->sa_ext, L2SDTA_SERVICE_VE_LEN);
-				wpsielen += L2SDTA_SERVICE_VE_LEN;
-			}
-		}
-#endif /* CONFIG_INTEL_WIDI */
 
 		/*	WiFi Simple Config State */
 		/*	Type: */
@@ -8996,47 +8955,6 @@ void rtw_dump_cur_efuse(PADAPTER padapter)
 }
 
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
-u32 Hal_readPGDataFromConfigFile(PADAPTER padapter)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(padapter);
-	u32 ret = _FALSE;
-	u32 maplen = 0;
-
-	EFUSE_GetEfuseDefinition(padapter, EFUSE_WIFI, TYPE_EFUSE_MAP_LEN , (void *)&maplen, _FALSE);
-
-	if (maplen < 256 || maplen > EEPROM_MAX_SIZE) {
-		RTW_ERR("eFuse length error :%d\n", maplen);
-		return _FALSE;
-	}	
-
-	ret = rtw_read_efuse_from_file(EFUSE_MAP_PATH, hal_data->efuse_eeprom_data, maplen);
-
-	hal_data->efuse_file_status = ((ret == _FAIL) ? EFUSE_FILE_FAILED : EFUSE_FILE_LOADED);
-
-	if (hal_data->efuse_file_status == EFUSE_FILE_LOADED)
-		rtw_dump_cur_efuse(padapter);
-
-	return ret;
-}
-
-u32 Hal_ReadMACAddrFromFile(PADAPTER padapter, u8 *mac_addr)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(padapter);
-	u32 ret = _FAIL;
-
-	if (rtw_read_macaddr_from_file(WIFIMAC_PATH, mac_addr) == _SUCCESS
-		&& rtw_check_invalid_mac_address(mac_addr, _TRUE) == _FALSE
-	) {
-		hal_data->macaddr_file_status = MACADDR_FILE_LOADED;
-		ret = _SUCCESS;
-	} else
-		hal_data->macaddr_file_status = MACADDR_FILE_FAILED;
-
-	return ret;
-}
-#endif /* CONFIG_EFUSE_CONFIG_FILE */
-
 int hal_config_macaddr(_adapter *adapter, bool autoload_fail)
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
@@ -9051,12 +8969,6 @@ int hal_config_macaddr(_adapter *adapter, bool autoload_fail)
 	if (addr_offset != -1)
 		hw_addr = &hal_data->efuse_eeprom_data[addr_offset];
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
-	/* if the hw_addr is written by efuse file, set to NULL */
-	if (hal_data->efuse_file_status == EFUSE_FILE_LOADED)
-		hw_addr = NULL;
-#endif
-
 	if (!hw_addr) {
 		/* try getting hw pg data */
 		if (Hal_GetPhyEfuseMACAddr(adapter, addr) == _SUCCESS)
@@ -9070,14 +8982,6 @@ int hal_config_macaddr(_adapter *adapter, bool autoload_fail)
 	}
 
 bypass_hw_pg:
-
-#ifdef CONFIG_EFUSE_CONFIG_FILE
-	/* check wifi mac file */
-	if (Hal_ReadMACAddrFromFile(adapter, addr) == _SUCCESS) {
-		_rtw_memcpy(hal_data->EEPROMMACAddr, addr, ETH_ALEN);
-		goto exit;
-	}
-#endif
 
 	_rtw_memset(hal_data->EEPROMMACAddr, 0, ETH_ALEN);
 	ret = _FAIL;

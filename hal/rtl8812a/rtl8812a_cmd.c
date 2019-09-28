@@ -386,9 +386,6 @@ void rtl8812_set_FwPwrMode_cmd(PADAPTER padapter, u8 PSMode)
 			pwrModeByte5 = 0x40;
 		}
 
-#ifdef CONFIG_EXT_CLK
-		Mode |= BIT(7);/* supporting 26M XTAL CLK_Request feature. */
-#endif /* CONFIG_EXT_CLK */
 	} else {
 		PowerState = 0x0C;/* AllON(0x0C), RFON(0x04), RFOFF(0x00) */
 		pwrModeByte5 = 0x40;
